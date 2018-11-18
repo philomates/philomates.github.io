@@ -1,0 +1,307 @@
+\documentclass{beamer}
+\usepackage[latin1]{inputenc}
+\usepackage{minted}
+
+\usetheme{default}
+\usecolortheme{dove}
+
+%gets rid of bottom navigation bars
+\setbeamertemplate{footline}[page number]{}
+
+%gets rid of navigation symbols
+\setbeamertemplate{navigation symbols}{}
+
+% center titles
+\setbeamertemplate{frametitle}[default][center]
+
+\title[Monads]{\Huge An Introduction to Monads}
+\author{Phillip Mates}
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Why Monads?}
+
+ In a purely functional language:
+  \begin{itemize}
+    \item How do you encode actions with side-effects, such as reading and writing files?
+    \item Is there an elegant way to pass around program state without explicitly threading it in and out of every function?
+    \item How do you code up doubly nested for-loops?
+    \item What about: Continuation passing style, Writing logs, Memory transactions\ldots
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{What are Monads?}
+  They're a very general abstraction idea that can be thought of as:
+  \vspace{.25in}
+  \begin{itemize}
+    \item containers that wrap values and are composable
+    \item the inverse of pointers
+    \item an abstraction for modeling sequential actions
+    \item \ldots
+  \end{itemize}
+\end{frame}
+
+\defverbatim[colored]\maybeType{
+  \begin{minted}{haskell}
+data Maybe a = Nothing
+             | Just a
+
+lookup :: a -> [(a, b)] -> Maybe b
+
+animalFriends :: [(String, String)]
+animalFriends = [ ("Pony", "Lion")
+                , ("Lion", "Manticore")
+                , ("Unicorn", "Lepricon") ]
+  \end{minted}
+}
+
+\begin{frame}{Error handling with Maybe}
+  \maybeType
+\end{frame}
+
+\defverbatim[colored]\maybeChain{
+  \begin{minted}{haskell}
+-- Does Pony's friend have a friend in animalMap?
+animalFriendLookup :: [(String, String)] -> Maybe String
+animalFriendLookup animalMap =
+  case lookup "Pony" animalMap of
+       Nothing -> Nothing
+       Just ponyFriend ->
+         case lookup ponyFriend animalMap of
+              Nothing -> Nothing
+              Just ponyFriendFriend ->
+                case lookup ponyFriendFriend animalMap of
+                     Nothing -> Nothing
+                     Just friend -> Just friend
+  \end{minted}
+}
+
+\begin{frame}
+  \maybeChain
+\end{frame}
+
+
+\defverbatim[colored]\monad{
+  \begin{minted}{haskell}
+-- Bind
+(>>=) :: m a -> (a -> m b) -> m b
+
+-- Inject value into a container
+return :: a -> m a
+  \end{minted}
+}
+
+\begin{frame}{Monads are comprised of two functions}
+  \monad
+\end{frame}
+
+
+\defverbatim[colored]\maybeDef{
+  \begin{minted}{haskell}
+-- (>>=) :: m a -> (a -> m b) -> m b
+Just x >>= k  =  k x
+Nothing >>= _ =  Nothing
+
+-- return :: a -> m a
+return x      =  Just x
+  \end{minted}
+}
+
+\begin{frame}{Maybe Monad}
+  \maybeDef
+\end{frame}
+
+\defverbatim[colored]\maybeBind{
+  \begin{minted}{haskell}
+monadicFriendLookup :: [(String, String)] -> Maybe String
+monadicFriendLookup animalMap =
+  lookup "Pony" animalMap
+  >>= (\ponyFriend -> lookup ponyFriend animalMap
+  >>= (\pony2ndFriend -> lookup pony2ndFriend animalMap
+  >>= (\friend -> Just friend)))
+  \end{minted}
+}
+
+\begin{frame}{Using Maybe as a Monad}
+  \maybeBind
+\end{frame}
+
+\defverbatim[colored]\maybeDo{
+  \begin{minted}{haskell}
+-- or even better:
+sugaryFriendLookup :: [(String, String)] -> Maybe String
+sugaryFriendLookup animalMap = do
+  ponyFriend   <- lookup "Pony" animalMap
+  ponyFriend'  <- lookup ponyFriend animalMap
+  ponyFriend'' <- lookup ponyFriend' animalMap
+  return friend
+  \end{minted}
+}
+
+\begin{frame}{Using Maybe as a Monad}
+  \maybeDo
+\end{frame}
+
+\defverbatim[colored]\transformStmt{
+  \begin{minted}{haskell}
+type Sexpr = String
+
+-- naive generation of unique symbol
+transformStmt :: Sexpr -> Int -> (Sexpr, Int)
+transformStmt expr counter = (newExpr, counter+1)
+  where newExpr = "(define " ++ var ++ " " ++ expr ++ ")"
+        var = "tmpVar" ++ (show counter)
+  \end{minted}
+}
+
+\begin{frame}{Threading program state}
+  \transformStmt
+\end{frame}
+
+\defverbatim[colored]\chop{
+  \begin{minted}{haskell}
+Int -> (Sexpr, Int)
+  \end{minted}
+}
+
+\defverbatim[colored]\transType{
+  \begin{minted}{haskell}
+transformStmt :: Sexpr -> Int -> (Sexpr, Int)
+  \end{minted}
+}
+
+\defverbatim[colored]\transState{
+  \begin{minted}{haskell}
+transformStmt :: Sexpr -> State Int Sexpr
+  \end{minted}
+}
+\defverbatim[colored]\generalizedState{
+  \begin{minted}{haskell}
+newtype State s a = State {
+      runState :: s -> (a, s)
+    }
+  \end{minted}
+}
+
+\begin{frame}[fragile, containsverbatim]{Generalizing the threading of state}
+  Let's drop \\
+  \chop
+  from \\
+  \transType
+  and replace it with a more general type constructor:
+  \vspace{.25in}
+  \uncover<2->{\generalizedState}
+  \uncover<2->{\transState}
+\end{frame}
+
+\defverbatim[colored]\stateDef{
+  \begin{minted}{haskell}
+-- return :: a -> State s a
+return a = State (\s -> (a, s))
+
+-- (>>=) :: State s a -> (a -> State s b) -> State s b
+m >>= k = State (\s -> let (a, s') = runState m s
+                      in runState (k a) s')
+  \end{minted}
+}
+
+\begin{frame}{State Monad}
+  \stateDef
+\end{frame}
+
+\begin{frame}{State Monad Example}
+\end{frame}
+
+
+\defverbatim[colored]\stateTypeCons{
+  \begin{minted}{haskell}
+-- this can't because it has arity 2:
+ghci> :kind State
+* -> * -> *
+
+-- but these have arity 1:
+ghci> :kind (State Int)
+* -> *
+
+ghci> :kind []
+* -> *
+  \end{minted}
+}
+
+\begin{frame}{What can be a Monad?}
+  Type constructors with an arity of one, for instance:
+  \stateTypeCons
+\end{frame}
+
+\defverbatim[colored]\typeDirectedList{
+  \begin{minted}{haskell}
+ghci> :type (>>=)
+(>>=) :: (Monad m) => m a -> (a -> m b) -> m b
+
+ghci> :type map
+map :: (a -> b) -> [a] -> [b]
+
+ghci> :type flip map
+flip map :: [a] -> (a -> b) -> [b]
+
+ghci> :type concat
+concat :: [[a]] -> [a]
+  \end{minted}
+}
+
+\begin{frame}{Deriving the list monad}
+  \typeDirectedList
+\end{frame}
+
+\defverbatim[colored]\listMonad{
+  \begin{minted}{haskell}
+return x = [x]
+xs >>= f = concat (map f xs)
+  \end{minted}
+}
+
+\defverbatim[colored]\powerset{
+  \begin{minted}{haskell}
+-- monadic powerset
+ghci> powerset = [1,2]
+             >>= (\i -> [1..4]
+             >>= (\j -> [(i, j)]))
+[(1,1),(1,2),(1,3),(1,4),(2,1),(2,2),(2,3),(2,4)]
+  \end{minted}
+}
+
+\begin{frame}[fragile]{The List monad models non-determinism}
+\listMonad
+\uncover<2->{\powerset}
+\end{frame}
+
+
+\defverbatim[colored]\desugar{
+  \begin{minted}{haskell}
+do x <- foo     ===     foo >>= (\x -> bar)
+   bar
+
+do act1         ===     act1 >> act2
+   act2
+  \end{minted}
+}
+
+\begin{frame}{Desugaring do Blocks}
+  \desugar
+\end{frame}
+
+\begin{frame}{Further Topics \& Reading}
+  \begin{itemize}
+    \item Monad Transformers
+    \item ``Real World Haskell" by O'Sullivan, Stewart, and Goerzen
+    \item Corresponding blog post: \url{quined.net/articles/monads.html}
+  \end{itemize}
+\end{frame}
+
+
+
+
+\end{document}
