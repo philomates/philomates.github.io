@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <title>Phillip Mates :: Monads: How do they work?</title>
+
+    <link rel="stylesheet" href="/css/screen.css">
+
+    <style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
+.MathJax_Menu_Button .MathJax_Hover_Arrow span {display: block; background-color: #AAA; border: 1px solid; border-radius: 3px; line-height: 0; padding: 4px}
+.MathJax_Hover_Arrow:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_Hover_Arrow:hover span {background-color: #CCC!important}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 5px 0px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 5px; -webkit-border-radius: 5px; -moz-border-radius: 5px; -khtml-border-radius: 5px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 1px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: .7em}
+.MathJax_MenuRadioCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuLabel {padding: 1px 2em 3px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #DDDDDD; margin: 4px 3px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: #606872; color: white}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">.MathJax_Preview .MJXf-math {color: inherit!important}
+</style><style type="text/css">.MJX_Assistive_MathML {position: absolute!important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0!important; border: 0!important; height: 1px!important; width: 1px!important; overflow: hidden!important; display: block!important; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none}
+.MJX_Assistive_MathML.MJX_Assistive_MathML_Block {width: 100%!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1px; bottom: 2px; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><style type="text/css">.MJXp-script {font-size: .8em}
+.MJXp-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXp-bold {font-weight: bold}
+.MJXp-italic {font-style: italic}
+.MJXp-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-largeop {font-size: 150%}
+.MJXp-largeop.MJXp-int {vertical-align: -.2em}
+.MJXp-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXp-display {display: block; text-align: center; margin: 1em 0}
+.MJXp-math span {display: inline-block}
+.MJXp-box {display: block!important; text-align: center}
+.MJXp-box:after {content: " "}
+.MJXp-rule {display: block!important; margin-top: .1em}
+.MJXp-char {display: block!important}
+.MJXp-mo {margin: 0 .15em}
+.MJXp-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXp-denom {display: inline-table!important; width: 100%}
+.MJXp-denom > * {display: table-row!important}
+.MJXp-surd {vertical-align: top}
+.MJXp-surd > * {display: block!important}
+.MJXp-script-box > *  {display: table!important; height: 50%}
+.MJXp-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXp-script-box > *:last-child > * {vertical-align: bottom}
+.MJXp-script-box > * > * > * {display: block!important}
+.MJXp-mphantom {visibility: hidden}
+.MJXp-munderover {display: inline-table!important}
+.MJXp-over {display: inline-block!important; text-align: center}
+.MJXp-over > * {display: block!important}
+.MJXp-munderover > * {display: table-row!important}
+.MJXp-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXp-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXp-mtr {display: table-row!important}
+.MJXp-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXp-mtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-mlabeledtr {display: table-row!important}
+.MJXp-mlabeledtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mlabeledtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXp-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXp-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXp-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXp-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXp-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXp-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXp-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXp-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXp-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXp-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_PHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style></head><body><div id="MathJax_Message" style="display: none;"></div>
+    <header id="header"><div class="wrapper">
+      <h1 id="title"><a href="../">Phillip Mates</a></h1>
+
+      <ul id="navigation">
+        <li><a href="../blog.html">Blog</a></li>
+        <li><a href="../projects">Projects</a></li>
+        <li><a href="../publications">Pubs</a></li>
+      </ul>
+    </div></header>
+
+    <section id="main" class="wrapper">
+<article>
+    <h1>Monads: How do they work?</h1>
+
+    <p class="date">March  5, 2012</p>
+
+    <p>I volunteered to give a presentation on monads for the <a href="http://www.eng.utah.edu/~cs6510/">Practical Functional Programming</a> course at the <a href="http://www.utah.edu/">U of U</a>.
+ This post is a product of me preparing for that talk. It is a general 
+overview of monads, as well as what types of problems they can solve. 
+I'm not concerned about providing anything novel here, in fact most of 
+the content found here is a rehash of other online resources (see <em>Further Reading</em> section).</p>
+<p>For readers interested in gaining a solid understanding of monads, I highly recommend trudging through chapters <a href="http://book.realworldhaskell.org/read/monads.html">14</a>, <a href="http://book.realworldhaskell.org/read/programming-with-monads.html">15</a>, and <a href="http://book.realworldhaskell.org/read/monad-transformers.html">18</a> of <a href="http://book.realworldhaskell.org/">Real World Haskell</a>.</p>
+<h2 id="motivation-for-monads">Motivation for Monads</h2>
+<p>How do you code up doubly nested for-loops in a purely functional 
+language? Is there an elegant way to pass around program state without 
+explicitly threading it in and out of every function? How do you encode 
+sequential actions, such as reading and writing files?</p>
+<p>It turns out that all of these problems can be solved using the monad abstraction.</p>
+<h2 id="what-is-a-monad">What is a Monad?</h2>
+<p>Monads are a general way to encode sequential actions. I like to 
+think of them as containers that wrap values of a given type and expose a
+ framework enabling action composition.</p>
+<p>When we work with monads we want to be able to wrap values in containers (<code>return</code>), as well as compose together containers (<code>bind</code> or <code>&gt;&gt;=</code>).</p>
+<p>In Haskell code, a monad is a typeclass. Typeclasses are a way of defining ad hoc polymorphism.</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="co">-- Monad Typeclass</span>
+<span class="kw">class</span> <span class="dt">Monad</span> m <span class="kw">where</span>
+    <span class="co">-- Chain together containers</span>
+<span class="ot">    (&gt;&gt;=) ::</span> m a <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> m b) <span class="ot">-&gt;</span> m b
+
+    <span class="co">-- Inject value into a container</span>
+<span class="ot">    return ::</span> a <span class="ot">-&gt;</span> m a
+
+    <span class="co">-- additional helper functions that aren't necessary:</span>
+    <span class="co">-- &gt;&gt; is like &gt;&gt;= but throws away the first result</span>
+<span class="ot">    (&gt;&gt;) ::</span> m a <span class="ot">-&gt;</span> m b <span class="ot">-&gt;</span> m b
+
+    <span class="co">-- fail is a technical necessity used for pattern match failures</span>
+    <span class="co">-- in do notation</span>
+<span class="ot">    fail ::</span> <span class="dt">String</span> <span class="ot">-&gt;</span> m a</code></pre>
+<p>If we want to make a type an instance of the <code>Monad</code> typeclass, we just have to define <code>&gt;&gt;=</code> and <code>return</code> for that type. Let's try it out with a data type you may have seen before.</p>
+<h2 id="maybe-monad">Maybe Monad</h2>
+<p>Did you know that the <code>Maybe</code> datatype is a monad used for anonymous exception handling? Let's define it and its monadic operators here:</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">Maybe</span> a <span class="fu">=</span> <span class="dt">Nothing</span>
+             <span class="fu">|</span> <span class="dt">Just</span> a
+
+<span class="kw">instance</span> <span class="dt">Monad</span> <span class="dt">Maybe</span> <span class="kw">where</span>
+    <span class="co">-- bind together operations</span>
+    <span class="dt">Just</span> x <span class="fu">&gt;&gt;=</span> k  <span class="fu">=</span>  k x
+    <span class="dt">Nothing</span> <span class="fu">&gt;&gt;=</span> _ <span class="fu">=</span>  <span class="dt">Nothing</span>
+
+    <span class="co">-- inject value</span>
+    return x      <span class="fu">=</span>  <span class="dt">Just</span> x
+
+    <span class="co">-- then</span>
+    <span class="dt">Just</span> _ <span class="fu">&gt;&gt;</span> k   <span class="fu">=</span>  k
+    <span class="dt">Nothing</span> <span class="fu">&gt;&gt;</span> _  <span class="fu">=</span>  <span class="dt">Nothing</span>
+
+    fail _        <span class="fu">=</span>  <span class="dt">Nothing</span></code></pre>
+<p>How does extending <code>Maybe</code> to be an instance of the <code>Monad</code> typeclass make our lives easier? Let's take a look at the <code>animalColorLookup</code> function, which doesn't utilize <code>Maybe</code> as a monad:</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="ot">animalFriends ::</span> [(<span class="dt">String</span>, <span class="dt">String</span>)]
+animalFriends <span class="fu">=</span> [ (<span class="st">"Pony"</span>, <span class="st">"Lion"</span>)
+                , (<span class="st">"Lion"</span>, <span class="st">"Manticore"</span>)
+                , (<span class="st">"Unicorn"</span>, <span class="st">"Lepricon"</span>)
+                ]
+
+<span class="co">-- Explicitly chaining Maybes to find ponys friends friends friend</span>
+<span class="ot">animalFriendLookup ::</span> [(<span class="dt">String</span>, <span class="dt">String</span>)] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+animalFriendLookup animalMap <span class="fu">=</span>
+  <span class="kw">case</span> lookup <span class="st">"Pony"</span> animalMap <span class="kw">of</span>
+       <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="dt">Nothing</span>
+       <span class="dt">Just</span> ponyFriend <span class="ot">-&gt;</span>
+         <span class="kw">case</span> lookup ponyFriend animalMap <span class="kw">of</span>
+              <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="dt">Nothing</span>
+              <span class="dt">Just</span> ponyFriendFriend <span class="ot">-&gt;</span>
+                <span class="kw">case</span> lookup ponyFriendFriend animalMap <span class="kw">of</span>
+                     <span class="dt">Nothing</span> <span class="ot">-&gt;</span> <span class="dt">Nothing</span>
+                     <span class="dt">Just</span> friend <span class="ot">-&gt;</span> <span class="dt">Just</span> friend</code></pre>
+<p>The chaining of <code>lookup</code> statements wrapped in <code>case</code> gets out of hand quickly. To remedy this we can make use of the <code>bind</code> (<code>&gt;&gt;=</code>) operator defined by the <code>Maybe</code> monad along with some anonymous functions to writer a cleaner version:</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="co">-- Use Bind to chain lookups</span>
+<span class="ot">monadicAnimalFriendLookup ::</span> [(<span class="dt">String</span>, <span class="dt">String</span>)] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+monadicAnimalFriendLookup animalMap <span class="fu">=</span>
+      lookup <span class="st">"Pony"</span> animalMap
+  <span class="fu">&gt;&gt;=</span> (\ponyFriend <span class="ot">-&gt;</span> lookup ponyFriend animalMap
+  <span class="fu">&gt;&gt;=</span> (\ponyFriendFriend <span class="ot">-&gt;</span> lookup ponyFriendFriend animalMap
+  <span class="fu">&gt;&gt;=</span> (\friend <span class="ot">-&gt;</span> <span class="dt">Just</span> friend)))</code></pre>
+<p>Lastly, most Haskellers are used to seeing <code>do</code> blocks when dealing with monads. <code>do</code> blocks are syntactic sugar to make monadic code look cleaner, as well as giving it an imperative feel.</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="co">-- Use Do-Block sugar magic</span>
+<span class="ot">sugaryAnimalFriendLookup ::</span> [(<span class="dt">String</span>, <span class="dt">String</span>)] <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">String</span>
+sugaryAnimalFriendLookup animalMap <span class="fu">=</span> <span class="kw">do</span>
+  ponyFriend <span class="ot">&lt;-</span> lookup <span class="st">"Pony"</span> animalMap
+  ponyFriendFriend <span class="ot">&lt;-</span> lookup ponyFriend animalMap
+  friend <span class="ot">&lt;-</span> lookup ponyFriendFriend animalMap
+  return friend</code></pre>
+<p>While <code>do</code> block syntax is nice, it sugar coats a lot 
+details that monad beginners should be exposed to. Hence, I'm going to 
+stick with the more explicit syntax for now, but later on I'll explain 
+how <code>do</code> block code is desugared.</p>
+<p>The <code>Maybe</code> monad offers some nice abstractions to clean 
+up code, but let's explore some examples that really show off the power 
+of monadic abstractions.</p>
+<h2 id="threading-state">Threading State</h2>
+<p>Say you want to code up some sort of abstract syntax tree (AST) 
+transformation program that traverses an AST, inserting unique symbols 
+every once and a while.</p>
+<p>To do this in a pure setting, one must pass a counter in and out of every function call that needs to create unique symbols:</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="co">-- for simplicity we'll use a string instead of an Abstract Data Type for ASTs</span>
+<span class="kw">type</span> <span class="dt">Sexpr</span> <span class="fu">=</span> <span class="dt">String</span>
+
+<span class="co">-- Add unique symbol to Sexpr using naive threading of program state</span>
+<span class="ot">transformStmt ::</span> <span class="dt">Sexpr</span> <span class="ot">-&gt;</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> (<span class="dt">Sexpr</span>, <span class="dt">Int</span>)
+transformStmt expr counter <span class="fu">=</span> (newExpr, newCounter)
+  <span class="kw">where</span> newExpr <span class="fu">=</span> <span class="st">"(define "</span> <span class="fu">++</span> uniqVarName <span class="fu">++</span> <span class="st">" "</span> <span class="fu">++</span> expr <span class="fu">++</span> <span class="st">")"</span>
+        newCounter <span class="fu">=</span> counter <span class="fu">+</span> <span class="dv">1</span>
+        uniqVarName <span class="fu">=</span> <span class="st">"tmpVar"</span> <span class="fu">++</span> (show counter)</code></pre>
+<p>This is fine, but there is potential for a lot of boilerplate. In 
+addition, if we decide we also need to pass around an environment set, 
+we'll have to manually change all of our function type signatures.</p>
+<p>This problem is screaming to be abstracted, so let's see if monads help…</p>
+<p><strong>Like the Internet, Monads are a series of pipes</strong></p>
+<p>It turns out we can generalize the threading of state seen in <code>transformStmt</code>. Let's chop off <code>Int -&gt; (Sexpr, Int)</code> from the <code>transformStmt</code> type signature and replace it with the <code>State</code> type constructor defined below. This leaves us with <code>transformStmt :: Sexpr -&gt; State Int Sexpr</code>.
+ They are of the exact same type but we've used the type constructor to 
+abstract away the fact that we take in a state value and output a state 
+value.</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="co">-- State type constructor with the runState record syntax</span>
+<span class="co">-- to extraction or 'run' the state</span>
+<span class="kw">newtype</span> <span class="dt">State</span> s a <span class="fu">=</span> <span class="dt">State</span> {
+<span class="ot">      runState ::</span> s <span class="ot">-&gt;</span> (a, s)
+    }</code></pre>
+<p>Now that we have a type constructor we can start to think about making an instance of the <code>Monad</code> typeclass. With <code>return</code> we want to take a normal value and make it accept a piece of state and return that state along with the original value.</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">Monad</span> (<span class="dt">State</span> s) <span class="kw">where</span>
+  <span class="co">-- return :: a -&gt; State s a</span>
+  return a <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \s <span class="ot">-&gt;</span> (a, s)
+
+  <span class="co">-- (&gt;&gt;=) :: State s a -&gt; (a -&gt; State s b) -&gt; State s b</span>
+  m <span class="fu">&gt;&gt;=</span> k <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \s <span class="ot">-&gt;</span> <span class="kw">let</span> (a, s') <span class="fu">=</span> runState m s
+                          <span class="kw">in</span> runState (k a) s'</code></pre>
+<p>And to compose state carrying functions (using <code>&gt;&gt;=</code>),
+ we want to take in a piece of state, evaluate the first function with 
+that state, and store the resulting state and value. Then we pass those 
+as parameters to the second function. This results in the program state 
+getting threaded in and out of both functions.</p>
+<p>Let's solidify this a bit by applying it to our AST transformer idea:</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="co">-- create a type for the state we want to pass around</span>
+<span class="kw">type</span> <span class="dt">SexprState</span> <span class="fu">=</span> <span class="dt">State</span> <span class="dt">Int</span>
+
+<span class="co">-- let's wrap an Sexpr in the State monad</span>
+<span class="ot">sexprWithState ::</span> <span class="dt">SexprState</span> <span class="dt">Sexpr</span>
+sexprWithState <span class="fu">=</span> return <span class="st">"(foo bar)"</span>
+
+<span class="co">-- Now let's run it with the initially state of 0</span>
+ghci<span class="fu">&gt;</span> runState sexprWithState <span class="dv">0</span>
+(<span class="st">"(foo bar)"</span>, <span class="dv">0</span>)
+
+<span class="co">-- wrap Sexpr in parenthesis</span>
+<span class="ot">wrapSexpr ::</span> <span class="dt">Sexpr</span> <span class="ot">-&gt;</span> <span class="dt">SexprState</span> <span class="dt">Sexpr</span>
+wrapSexpr exp <span class="fu">=</span> return <span class="fu">$</span> <span class="st">"("</span> <span class="fu">++</span> exp <span class="fu">++</span> <span class="st">")"</span>
+
+<span class="co">-- wrap Sexpr in qux</span>
+<span class="ot">addQux ::</span> <span class="dt">Sexpr</span> <span class="ot">-&gt;</span> <span class="dt">SexprState</span> <span class="dt">Sexpr</span>
+addQux exp <span class="fu">=</span> return <span class="fu">$</span> <span class="st">"(qux "</span> <span class="fu">++</span> exp <span class="fu">++</span> <span class="st">")"</span>
+
+ghci<span class="fu">&gt;</span> runState (sexprWithState
+           <span class="fu">&gt;&gt;=</span> (\exp <span class="ot">-&gt;</span> wrapSexpr exp
+           <span class="fu">&gt;&gt;=</span> (\exp2 <span class="ot">-&gt;</span> addQux exp2))) <span class="dv">0</span>
+(<span class="st">"(qux ((foo bar)))"</span>,<span class="dv">0</span>)</code></pre>
+<p>So now we are doing all of our S-Expression manipulation while 
+passing around state in the background. But wait, we aren't doing 
+anything with the state!</p>
+<p><strong>Accessing and Modifying State</strong></p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="ot">get ::</span> <span class="dt">State</span> s s
+get <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \s <span class="ot">-&gt;</span> (s, s)
+
+<span class="ot">put ::</span> s <span class="ot">-&gt;</span> <span class="dt">State</span> s ()
+put s <span class="fu">=</span> <span class="dt">State</span> <span class="fu">$</span> \_ <span class="ot">-&gt;</span> ((), s)
+
+<span class="co">-- example of getting and modifying state</span>
+ghci<span class="fu">&gt;</span> runState (sexprWithState
+           <span class="fu">&gt;&gt;=</span> wrapSexpr
+           <span class="fu">&gt;&gt;=</span> (\exp' <span class="ot">-&gt;</span> get
+           <span class="fu">&gt;&gt;=</span> (\counter <span class="ot">-&gt;</span> (put (counter<span class="fu">+</span><span class="dv">1</span>))
+           <span class="fu">&gt;&gt;</span> (return exp')
+           <span class="fu">&gt;&gt;=</span> addQux))) <span class="dv">0</span>
+(<span class="st">"(qux ((foo bar)))"</span>,<span class="dv">1</span>)</code></pre>
+<p><strong>transformStmt revisited</strong></p>
+<p>With our new found friend the State monad, we can rewrite the original <code>transformStmt</code> function in a monadic style. This enables us to abstract away all the explicit threading of state.</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="ot">transformStmt' ::</span> <span class="dt">Sexpr</span> <span class="ot">-&gt;</span> <span class="dt">SexprState</span> <span class="dt">Sexpr</span>
+transformStmt' expr <span class="fu">=</span>
+  <span class="co">-- grab the current program state</span>
+  get
+  <span class="co">-- increment the counter by 1 and store it</span>
+  <span class="fu">&gt;&gt;=</span> (\counter <span class="ot">-&gt;</span> (put (counter<span class="fu">+</span><span class="dv">1</span>))
+  <span class="co">-- do the sexpr transformation</span>
+  <span class="fu">&gt;&gt;</span> (return <span class="fu">$</span> <span class="st">"(define tmpVar"</span> <span class="fu">++</span> (show counter) <span class="fu">++</span> <span class="st">" "</span> <span class="fu">++</span> expr <span class="fu">++</span> <span class="st">")"</span>))
+
+<span class="co">-- And again using do block sugar</span>
+<span class="ot">transformStmtDo ::</span> <span class="dt">Sexpr</span> <span class="ot">-&gt;</span> <span class="dt">SexprState</span> <span class="dt">Sexpr</span>
+transformStmtDo expr <span class="fu">=</span> <span class="kw">do</span>
+  counter <span class="ot">&lt;-</span> get
+  put (counter<span class="fu">+</span><span class="dv">1</span>)
+  return <span class="fu">$</span> <span class="st">"(define tmpVar"</span> <span class="fu">++</span> (show counter) <span class="fu">++</span> <span class="st">" "</span> <span class="fu">++</span> expr <span class="fu">++</span> <span class="st">")"</span></code></pre>
+<h2 id="list-is-a-monad">List is a Monad</h2>
+<p>Haskell is known for making easy things really hard. In fact, I was 
+never really able iterate over a doubly nested list until I realized 
+that lists are monads in Haskell. Specifically, lists are used in a 
+monadic style to model nondeterminism, most commonly in Haskell's crazy <a href="http://www.haskell.org/haskellwiki/List_comprehension">list comprehension</a> sugar.</p>
+<p>As before, let's try and define <code>return</code> and <code>&gt;&gt;=</code> for the <code>[]</code> type constructor. In the <code>Monad</code> typeclass, <code>return</code> takes type <code>a</code> and wraps it in a type constructor <code>m</code> to give the type <code>m a</code>. So in the case of list, <code>a</code> will be wrapped in the type constructor <code>[]</code>, resulting in <code>[] a</code>, or more easily read as <code>[a]</code>.</p>
+<p>To formulate <code>&gt;&gt;=</code> for lists, let us look at the type signature and see if we can find something that matches.</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell">ghci<span class="fu">&gt;</span> <span class="fu">:</span><span class="kw">type</span> (<span class="fu">&gt;&gt;=</span>)
+<span class="ot">(&gt;&gt;=) ::</span> (<span class="dt">Monad</span> m) <span class="ot">=&gt;</span> m a <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> m b) <span class="ot">-&gt;</span> m b
+
+ghci<span class="fu">&gt;</span> <span class="fu">:</span><span class="kw">type</span> map
+map<span class="ot"> ::</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [a] <span class="ot">-&gt;</span> [b]
+
+ghci<span class="fu">&gt;</span> <span class="fu">:</span><span class="kw">type</span> flip map
+flip<span class="ot"> map ::</span> [a] <span class="ot">-&gt;</span> (a <span class="ot">-&gt;</span> b) <span class="ot">-&gt;</span> [b]</code></pre>
+<p><code>flip map</code> looks close, but we really want a type of <code>[a] -&gt; (a -&gt; [b]) -&gt; [b]</code>. Hence we can substitute <code>[b]</code> for <code>b</code>, resulting in a type of <code>[a] -&gt; (a -&gt; [b]) -&gt; [[b]]</code>, which can then be massaged using <code>concat :: [[a]] -&gt; [a]</code>.</p>
+<p>The resulting formulation is:</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="kw">instance</span> <span class="dt">Monad</span> [] <span class="kw">where</span>
+    return x <span class="fu">=</span> [x]
+    xs <span class="fu">&gt;&gt;=</span> f <span class="fu">=</span> concat (map f xs)
+
+    xs <span class="fu">&gt;&gt;</span> f <span class="fu">=</span> concat (map (\_ <span class="ot">-&gt;</span> f) xs)
+    fail _ <span class="fu">=</span> []</code></pre>
+<p><strong>What does this give us?</strong></p>
+<p>Well, list comprehension:</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="co">-- monadic powerset</span>
+ghci<span class="fu">&gt;</span> powerset <span class="fu">=</span> [<span class="dv">1</span>,<span class="dv">2</span>]
+             <span class="fu">&gt;&gt;=</span> (\i <span class="ot">-&gt;</span> [<span class="dv">1</span><span class="fu">..</span><span class="dv">4</span>]
+             <span class="fu">&gt;&gt;=</span> (\j <span class="ot">-&gt;</span> [(i, j)]))
+[(<span class="dv">1</span>,<span class="dv">1</span>),(<span class="dv">1</span>,<span class="dv">2</span>),(<span class="dv">1</span>,<span class="dv">3</span>),(<span class="dv">1</span>,<span class="dv">4</span>),(<span class="dv">2</span>,<span class="dv">1</span>),(<span class="dv">2</span>,<span class="dv">2</span>),(<span class="dv">2</span>,<span class="dv">3</span>),(<span class="dv">2</span>,<span class="dv">4</span>)]
+
+
+<span class="co">-- or the same using do sugar</span>
+<span class="kw">do</span> i <span class="ot">&lt;-</span> [<span class="dv">1</span>,<span class="dv">2</span>]
+   j <span class="ot">&lt;-</span> [<span class="dv">1</span><span class="fu">..</span><span class="dv">4</span>]
+   return (i,j)
+
+<span class="co">-- or as list comprehension</span>
+[(i, j) <span class="fu">|</span> i <span class="ot">&lt;-</span> [<span class="dv">1</span>,<span class="dv">2</span>], j <span class="ot">&lt;-</span> [<span class="dv">1</span><span class="fu">..</span><span class="dv">4</span>]]</code></pre>
+<p>For a more detailed explanation and formulation of the list monad, see <a href="http://book.realworldhaskell.org/read/monads.html#id641620">Chapter 14 of Real World Haskell</a>.</p>
+<h2 id="desurgaring-do-blocks">Desurgaring Do Blocks</h2>
+<p>Ahhh, the sugary sweetness of <code>do</code> blocks. To the novice Haskeller it makes monads look like magic. We've avoided them thus far, but once the desugaring of <code>do</code> blocks is demystified, using <code>do</code> syntax is much more convenient.</p>
+<p>So how are <code>do</code> blocks desugared into monadic operators?</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="co">-- this do block notation</span>
+<span class="kw">do</span> x <span class="ot">&lt;-</span> foo
+   bar
+<span class="co">-- desugars into:</span>
+foo <span class="fu">&gt;&gt;=</span> (\x <span class="ot">-&gt;</span> bar)
+
+<span class="co">-- successive actions</span>
+<span class="kw">do</span> act1
+   act2
+   <span class="fu">...</span>
+<span class="co">-- desugar into:</span>
+ act1 <span class="fu">&gt;&gt;</span>
+ act2 <span class="fu">&gt;&gt;</span>
+ <span class="fu">...</span>
+
+<span class="co">-- this do block notation</span>
+<span class="kw">do</span> <span class="kw">let</span> x <span class="fu">=</span> expr
+       x1 <span class="fu">...</span>
+   act1
+   act2
+   <span class="fu">...</span>
+<span class="co">-- desugars into:</span>
+<span class="kw">let</span> x <span class="fu">=</span> expr
+    x1 <span class="fu">...</span>
+<span class="kw">in</span> <span class="kw">do</span> act1
+      act2
+      <span class="fu">...</span></code></pre>
+<h2 id="parametric-guarantees">Parametric Guarantees</h2>
+<p>One thing to note is that only types of the kind <code>* -&gt; *</code> (type constructors of arity 1) can be made instances of the <code>Monad</code> typeclass. This means that the values monads wrap are <a href="https://cubeoflambda.wordpress.com/2011/11/16/parametricity/">parametrically polymorphic</a>, ensuring that monadic functions act uniformily on them. That is, <code>&gt;&gt;=</code> and <code>return</code>
+ cannot directly manipulate the values they wrap because Haskell doesn't
+ support type introspection. This doesn't mean that these functions 
+cannot however manipulate other non-polymorphic values present in the 
+type constructor. For instance this we can construct a monad that counts
+ the number of times <code>&gt;&gt;=</code> is called:</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="kw">data</span> <span class="dt">BindCounter</span> a <span class="fu">=</span> <span class="dt">BindCounter</span> <span class="dt">Int</span> a
+
+<span class="kw">instance</span> <span class="dt">Monad</span> <span class="dt">BindCounter</span> <span class="kw">where</span>
+  <span class="co">-- inject</span>
+  return a <span class="fu">=</span> <span class="dt">BindCounter</span> <span class="dv">0</span> a
+  <span class="co">-- bind</span>
+  (<span class="dt">BindCounter</span> x y) <span class="fu">&gt;&gt;=</span> k <span class="fu">=</span> <span class="dt">BindCounter</span> (x<span class="fu">+</span><span class="dv">1</span>) y'
+                              <span class="kw">where</span> <span class="dt">BindCounter</span> _ y' <span class="fu">=</span> (k y)
+
+<span class="ot">fooRun ::</span> <span class="dt">IO</span> ()
+fooRun <span class="fu">=</span> <span class="kw">do</span>
+      <span class="co">-- inject "foo" into the BindCounter Monad</span>
+  <span class="kw">let</span> x <span class="fu">=</span> return <span class="st">"foo"</span><span class="ot"> ::</span> <span class="dt">BindCounter</span> <span class="dt">String</span>
+      <span class="co">-- do some monadic string appends</span>
+      <span class="dt">BindCounter</span> count val <span class="fu">=</span> x
+        <span class="fu">&gt;&gt;=</span> (\y <span class="ot">-&gt;</span> <span class="dt">BindCounter</span> <span class="dv">0</span> (y <span class="fu">++</span> <span class="st">" bar"</span>))
+        <span class="fu">&gt;&gt;=</span> (\y <span class="ot">-&gt;</span> <span class="dt">BindCounter</span> <span class="dv">0</span> (y <span class="fu">++</span> <span class="st">" baz"</span>))
+        <span class="fu">&gt;&gt;=</span> (\y <span class="ot">-&gt;</span> <span class="dt">BindCounter</span> <span class="dv">0</span> (y <span class="fu">++</span> <span class="st">" qux"</span>))
+  putStrLn <span class="fu">$</span> <span class="st">"bind count: "</span> <span class="fu">++</span> (show count) <span class="fu">++</span> <span class="st">", resulting value: "</span> <span class="fu">++</span> val
+
+ghci<span class="fu">&gt;</span> fooRun
+bind count<span class="fu">:</span> <span class="dv">3</span>, resulting value<span class="fu">:</span> foo bar baz qux</code></pre>
+<h2 id="monadic-laws">Monadic Laws</h2>
+<p>Monads should also follow 3 laws: right identity, left identity and 
+associativity. Haskell doesn't enforce these laws, but if your monads 
+don't follow them, people will probably get confused. In addition, these
+ laws are required in order for a monad to form a mathematical category,
+ which is where the name monad came from <a href="http://www.haskell.org/haskellwiki/Monad_laws">[ref]</a>.</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="co">-- Right Identity:</span>
+<span class="co">--   no need to wrap an already wrapped value</span>
+m <span class="fu">&gt;&gt;=</span> return <span class="fu">===</span> m
+
+<span class="co">-- do-notation version:</span>
+<span class="kw">do</span> { x' <span class="ot">&lt;-</span> return x            <span class="kw">do</span> { f x
+     f x' }            <span class="fu">===</span>        }
+
+<span class="co">-- Left Identity:</span>
+<span class="co">--   no need to wrap and unwrap a pure value</span>
+return x <span class="fu">&gt;&gt;=</span> f <span class="fu">===</span> f x
+
+<span class="co">-- do-notation version:</span>
+<span class="kw">do</span> { x <span class="ot">&lt;-</span> m            <span class="fu">===</span>     <span class="kw">do</span> { m
+     return x }                   }
+
+<span class="co">-- associativity:</span>
+<span class="co">--   preservation of ordering</span>
+(m <span class="fu">&gt;&gt;=</span> f) <span class="fu">&gt;&gt;=</span> g  <span class="fu">===</span>  m <span class="fu">&gt;&gt;=</span> (\x <span class="ot">-&gt;</span> f x <span class="fu">&gt;&gt;=</span> g)
+
+<span class="co">-- do-notation version:</span>
+<span class="kw">do</span> { y <span class="ot">&lt;-</span> <span class="kw">do</span> { x <span class="ot">&lt;-</span> m          <span class="kw">do</span> { x <span class="ot">&lt;-</span> m
+               f x                  <span class="kw">do</span> { y <span class="ot">&lt;-</span> f x
+             }         <span class="fu">===</span>               g y
+     g y                               }
+   }                              }
+
+                               <span class="kw">do</span> { x <span class="ot">&lt;-</span> m
+                                    y <span class="ot">&lt;-</span> f x
+                       <span class="fu">===</span>          g y
+                                  }</code></pre>
+<p>We can also define these laws using the monad composition operator defined in Control.Monad <a href="http://www.haskell.org/haskellwiki/Monad_laws">[ref]</a>:</p>
+<pre class="sourceCode Haskell"><code class="sourceCode haskell"><span class="ot">(&gt;=&gt;) ::</span> <span class="dt">Monad</span> m <span class="ot">=&gt;</span> (a <span class="ot">-&gt;</span> m b) <span class="ot">-&gt;</span> (b <span class="ot">-&gt;</span> m c) <span class="ot">-&gt;</span> a <span class="ot">-&gt;</span> m c
+m <span class="fu">&gt;=&gt;</span> n <span class="fu">=</span> \x <span class="ot">-&gt;</span> <span class="kw">do</span> { y <span class="ot">&lt;-</span> m x; n y }
+
+<span class="co">-- Left identity</span>
+return <span class="fu">&gt;=&gt;</span> g <span class="fu">===</span> g
+
+<span class="co">-- Right identity</span>
+f <span class="fu">&gt;=&gt;</span> return <span class="fu">===</span> f
+
+<span class="co">-- Associativity</span>
+(f <span class="fu">&gt;=&gt;</span> g) <span class="fu">&gt;=&gt;</span> h <span class="fu">===</span> f <span class="fu">&gt;=&gt;</span> (g <span class="fu">&gt;=&gt;</span> h)</code></pre>
+<h2 id="resources">Resources</h2>
+<ul>
+<li>Corresponding Monad Slides <a href="http://www.ccs.neu.edu/home/mates/files/monad-slides.pdf">PDF</a> &amp; <a href="http://www.ccs.neu.edu/home/mates/files/monad-slides.tex">Beamer</a></li>
+<li>Example Code: [<a href="http://www.ccs.neu.edu/home/mates/code/monads/MaybeMonad.hs">maybe monad</a>, <a href="http://www.ccs.neu.edu/home/mates/code/monads/SexprState.hs">state monad</a>]</li>
+</ul>
+<h2 id="further-reading">Further Reading</h2>
+<ul>
+<li><a href="https://en.wikibooks.org/wiki/Haskell/Understanding_monads">Haskell WikiBook: Understanding Monads</a></li>
+<li>Chapters <a href="http://book.realworldhaskell.org/read/monads.html">14</a>, <a href="http://book.realworldhaskell.org/read/programming-with-monads.html">15</a>, and <a href="http://book.realworldhaskell.org/read/monad-transformers.html">18</a> of <a href="http://book.realworldhaskell.org/">Real World Haskell</a> by Bryan O'Sullivan, Don Stewart, and John Goerzen</li>
+</ul>
+</article>
+</section>
+
+<footer id="footer" class="wrapper">
+</footer>
+
+
+    <script src="..;/MathJax.js" id=""></script>
+
+</body></html>

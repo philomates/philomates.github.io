@@ -1,0 +1,33 @@
+{:site-title                   "Phillip Mates"
+ :author                       "Phillip Mates"
+ :description                  "technical musings on programming languages"
+ :site-url                     "https://philomates.github.io/"
+ :post-root                    "posts"
+ :page-root                    "pages"
+ :post-root-uri                "articles"
+ :page-root-uri                "pages-output"
+ :public-dest                  "public"
+ :blog-prefix                  "/"
+ :rss-name                     "articles.xml"
+ :rss-filters []
+ :recent-posts                 3
+ :post-date-format             "yyyy-MM-dd"
+ :archive-group-format         "yyyy"
+ :sass-src                     []
+ :sass-path                    "sass"
+ :theme                        "hakyll"
+ ; :theme                        "blue"
+ :resources                    ["code" "files" "favicon.ico" "pubs" "img" "projects" "publications" "articles"]
+ :keep-files                   [".git"]
+ :disqus?                      false
+ :disqus-shortname             ""
+ :ignored-files                [#"\.#.*" #".*\.swp$"]
+ :previews?                    false
+ :posts-per-page               5
+ :blocks-per-preview           2
+ :clean-urls                   :trailing-slash
+ :collapse-subdirs?            false
+ :hide-future-posts?           true
+ :klipse                       {}
+ :description-include-elements #{:p :h1 :h2 :h3 :h4 :h5 :h6}
+ :debug?                       false}
