@@ -1,6 +1,6 @@
 {:title "Hanging in the Shadow Realm with JavaScriptCore"
  :layout :post
- :description "hello"
+ :description "An introduction to implementing new JS features in JavaScriptCore"
  :tags  []
  :toc false}
 
