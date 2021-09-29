@@ -66,9 +66,9 @@ In a way, only being able to pass around primitives and functions is pretty cons
 
 ## The JSC implementation
 
-Recently, after a couple years of discussion, adaption, and refinement, the Shadow Realm proposal reached [stage 3](https://tc39.es/process-document/) as a TC39 proposal. In stage 3, the main thing left reach the last TC39 stage is to implement the feature in 2 major web browser JS engines.
+Recently, after a couple years of discussion, adaption, and refinement, the Shadow Realm proposal reached [stage 3](https://tc39.es/process-document/) as a TC39 proposal. In stage 3, the main thing left reach the last TC39 stage is to implement the feature in 2 major web browsers.
 
-At Igalia we've been working with SalesForce on Shadow Realms. They've put a lot of work into the proposal and are excited about how it could help them with sandboxing tools like Lightning Locker. And given our expertise on JS engines, we were happy to work with them on the JSC implementation, which is how I got invovled.
+At Igalia we've been working with SalesForce on Shadow Realms. They've put a lot of work into the proposal and are excited about how it could help them with sandboxing tools like Lightning Locker. And given our expertise on JS engines, we were happy to work with them on the WebKit/JSC implementation, which is how I got invovled.
 
 ### implementation options
 
@@ -159,7 +159,7 @@ function wrap(targetFunction) {
 These can be redefined at runtime, which is dangerous. I thus later updated them to `args.@map(@wrap)` and `targetFunction.@apply(@undefined, wrappedArgs)` respectively. The protected version of `Array.prototype.map`, `@map`, wasn't actually exposed beforehand, but it was easy to enough to make avaiable with [this](https://github.com/WebKit/WebKit/compare/main...philomates:shadow-realm-patch-iii?expand=1#diff-6b24e225993b3ab3229b57e9279aae265badb1c9fd28f1a07d060073ecee8bf9R108)
 
 
-#### a random gotcha: changes to a JS built-in doesn't register
+#### a build gotcha: changes to a JS built-in are ignored
 
 At various points during the development of `builtins/ShadowRealmPrototype.js` I my changes weren't included in re-builds I triggered.
 
