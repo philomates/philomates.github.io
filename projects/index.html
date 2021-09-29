@@ -5,9 +5,7 @@
     <link rel="shortcut icon" href="/favicon.ico">
     <title>Phillip Mates :: Projects</title>
 
-    <link rel="stylesheet" href="/main.css">
-
-    <link rel="alternate" type="application/atom+xml" href="/articles.atom" title="Cube of Lambda feed">
+    <link rel="stylesheet" href="/css/screen.css">
 
     <style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
 .MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
@@ -121,149 +119,149 @@
 
       <section class="content">
         <div class="project section" id="clo">
-  
-<p><img alt="" class="imageright" src="clo.png"></p>
+
+<p><img alt="" class="imageright" src="/projects/clo.png"></p>
 <h3>
 Equivalence-Preserving Closure Conversion in the Presence of Mutable References
 </h3>
 
 <p>
-  
-Closure conversion is a compiler pass that hoists free variables out of 
+
+Closure conversion is a compiler pass that hoists free variables out of
 functions and into environments, simplifying subsequent passes. In “<a href="http://www.ccs.neu.edu/~jtpercon/multilang-verify.pdf">Verifying an Open Compiler Using Multi-Language Semantics</a>”
- Perconti and Ahmed show a typed closure conversion pass 
-semantics-preserving for a language with recursion. My current work 
+ Perconti and Ahmed show a typed closure conversion pass
+semantics-preserving for a language with recursion. My current work
 attempts to determine if this compiler pass preserves not only semantics
- but also equivalences, when the language is extended with mutable 
+ but also equivalences, when the language is extended with mutable
 references.
 </p>
 </div>
 
 <div class="project section" id="cps">
-  
-<p><img alt="" class="imageright" src="cps.png"></p>
+
+<p><img alt="" class="imageright" src="/projects/cps.png"></p>
 <h3>
 Equivalence-Preserving CPS Translation with recursive types
 </h3>
 
 <p>
-  
+
 In “<a href="http://www.ccs.neu.edu/home/amal/papers/epc.pdf">An Equivalence-Preserving CPS Translation via Multi-Language Semantics</a>”
  Ahmed and Blume claim their approach scales to languages with recursive
- types. During the first year of my PhD I attempted, and failed, to 
-realize this claim. More details on the intricacies of this extension 
+ types. During the first year of my PhD I attempted, and failed, to
+realize this claim. More details on the intricacies of this extension
 can be found in our HOPE 13 <a href="../pubs/hope13_proposal.pdf">abstract</a>.
 </p>
 </div>
 <div class="project section" id="black-hole">
-  
-<p><img alt="" class="imageright" src="black-hole.png"></p>
+
+<p><img alt="" class="imageright" src="/projects/black-hole.png"></p>
 <h3>
 Black Hole Analysis
 </h3>
 
 <p>
-  
+
 </p><p><a href="https://github.com/philomates/black-hole-analysis">[Code]</a></p>
-Static analysis on incomplete programs is hard. I worked with David Van 
-Horn towards remedying this by mechanizing a refinement relation 
+Static analysis on incomplete programs is hard. I worked with David Van
+Horn towards remedying this by mechanizing a refinement relation
 soundness proof over modular black hole semantics.
 <p></p>
 </div>
 
 <div class="project section" id="android">
-  
-<p><img alt="" class="imageright" src="lattice.png"></p>
+
+<p><img alt="" class="imageright" src="/projects/lattice.png"></p>
 <h3>
 Abstract Interpretation of Android Apps
 </h3>
 
 <p>
-  
+
 </p><p><a href="https://github.com/philomates/dalvik-abstract-interpreter">[Code]</a></p>
 What security properties can we statically guarantee about Android Apps? As a part of the U-Combinator group, I applied theoretical results in abstract interpretation to the Android stack. More details can be found in this <a href="../pubs/mates-icfp12src-abstract.pdf">pdf abstract</a>.
 <p></p>
 </div>
 
 <div class="project section" id="thesis">
-  
-<p><img alt="" class="imageright" src="cubeoflambda.png"></p>
+
+<p><img alt="" class="imageright" src="/projects/cubeoflambda.png"></p>
 <h3>
 Undergraduate Thesis
 </h3>
 
 <p>
-  
+
 </p><p><a href="../pubs/mates_ugrad_thesis.pdf">[PDF]</a> | <a href="http://cubeoflambda.wordpress.com/">[Blog]</a></p>
 A study into the Curry-Howard Isomorphism.
 <p></p>
 </div>
 
 <div class="project section" id="primes">
-  
-<img alt="" class="imageright" src="primes.png">
+
+<img alt="" class="imageright" src="/projects/primes.png">
 <h3>
 Primality Testing
 </h3>
 
 <p>
-  
+
 </p><p><a href="https://github.com/philomates/ecpp-aks-primality-proving">[Code]</a> | <a href="../files/primes_report.pdf">[PDF]</a></p>
-<p>For Suresh Venkat's graduate level Algorithms course our group 
-implemented ECPP and AKS primality testing algorithms. Furthermore we 
+<p>For Suresh Venkat's graduate level Algorithms course our group
+implemented ECPP and AKS primality testing algorithms. Furthermore we
 hybridized the two algorithms as described by <a href="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.7.4627">Cheng</a>. This involves doing one round of ECPP to reduce the prime to be proved by AKS.</p>
 <p></p>
 </div>
 
 <div class="project section" id="python">
-  
-<p><img alt="" class="imageright" src="/python.png"></p>
+
+<p><img alt="" class="imageright" src="/projects/python.png"></p>
 <h3>
 Python Compiler
 </h3>
   <p>
-  
+
 </p><p><a href="https://github.com/philomates/derpy">[Code]</a></p>
 <p>I wrote a compiler for a subset of Python3 in Haskell for Matt Might's <a href="http://matt.might.net/teaching/compilers/spring-2011/">Compilers</a>. The lexer and parser were built using <a href="http://matt.might.net/papers/might2011derivatives.pdf">derivative methods</a>.
- The parsed result was a high intermediate language which was then 
-transformed into a low intermediate language and put into Continuation 
-Passing Style. I then translated the CPS representation into a strict 
+ The parsed result was a high intermediate language which was then
+transformed into a low intermediate language and put into Continuation
+Passing Style. I then translated the CPS representation into a strict
 subset of C which was compiled down to x86 using GCC.</p>
 <p></p>
 </div>
 
 <div class="project section" id="crowdlabs">
-  
-<img alt="" class="imageright" src="crowdlabs.png">
+
+<img alt="" class="imageright" src="/projects/crowdlabs.png">
 <h3>
 crowdLabs
 </h3>
 
 <p>
-  
+
 </p><p><a href="../pubs/crowdlabs_ssdbm11.pdf">[PDF]</a></p>
-crowdLabs is a social visualization repository for the scientific 
+crowdLabs is a social visualization repository for the scientific
 workflow management system VisTrails. It adopts the model used by social
- Web sites and that integrates a set of usable tools and a scalable 
-infrastructure to provide an environment for scientists to 
+ Web sites and that integrates a set of usable tools and a scalable
+infrastructure to provide an environment for scientists to
 collaboratively analyze and visualize data.
 <p></p>
 </div>
 
 <div class="project section" id="vistrails">
-  
-<img alt="" class="imageright" src="vistrails.jpg">
+
+<img alt="" class="imageright" src="/projects/vistrails.jpg">
 <h3>
 VisTrails
 </h3>
   <p>
-  
-<a href="http://www.vistrails.org/">VisTrails</a> is an open-source 
-scientific workflow and provenance management system developed at the 
-University of Utah that provides support for data exploration and 
-visualization. A key distinguishing feature of VisTrails is a 
-comprehensive provenance infrastructure that maintains detailed history 
-information about the steps followed and data derived in the course of 
+
+<a href="http://www.vistrails.org/">VisTrails</a> is an open-source
+scientific workflow and provenance management system developed at the
+University of Utah that provides support for data exploration and
+visualization. A key distinguishing feature of VisTrails is a
+comprehensive provenance infrastructure that maintains detailed history
+information about the steps followed and data derived in the course of
 an exploratory task: VisTrails maintains provenance of data products, of
  the workflows that derive these products and their executions.
 </p>
