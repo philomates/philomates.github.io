@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <title>Contract Verification using Symbolic Execution</title>
+
+    <link rel="stylesheet" href="/css/screen.css">
+
+    <style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
+.MathJax_Menu_Button .MathJax_Hover_Arrow span {display: block; background-color: #AAA; border: 1px solid; border-radius: 3px; line-height: 0; padding: 4px}
+.MathJax_Hover_Arrow:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_Hover_Arrow:hover span {background-color: #CCC!important}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 5px 0px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 5px; -webkit-border-radius: 5px; -moz-border-radius: 5px; -khtml-border-radius: 5px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 1px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: .7em}
+.MathJax_MenuRadioCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuLabel {padding: 1px 2em 3px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #DDDDDD; margin: 4px 3px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: #606872; color: white}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">.MathJax_Preview .MJXf-math {color: inherit!important}
+</style><style type="text/css">.MJX_Assistive_MathML {position: absolute!important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0!important; border: 0!important; height: 1px!important; width: 1px!important; overflow: hidden!important; display: block!important; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none}
+.MJX_Assistive_MathML.MJX_Assistive_MathML_Block {width: 100%!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1px; bottom: 2px; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><style type="text/css">.MJXp-script {font-size: .8em}
+.MJXp-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXp-bold {font-weight: bold}
+.MJXp-italic {font-style: italic}
+.MJXp-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-largeop {font-size: 150%}
+.MJXp-largeop.MJXp-int {vertical-align: -.2em}
+.MJXp-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXp-display {display: block; text-align: center; margin: 1em 0}
+.MJXp-math span {display: inline-block}
+.MJXp-box {display: block!important; text-align: center}
+.MJXp-box:after {content: " "}
+.MJXp-rule {display: block!important; margin-top: .1em}
+.MJXp-char {display: block!important}
+.MJXp-mo {margin: 0 .15em}
+.MJXp-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXp-denom {display: inline-table!important; width: 100%}
+.MJXp-denom > * {display: table-row!important}
+.MJXp-surd {vertical-align: top}
+.MJXp-surd > * {display: block!important}
+.MJXp-script-box > *  {display: table!important; height: 50%}
+.MJXp-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXp-script-box > *:last-child > * {vertical-align: bottom}
+.MJXp-script-box > * > * > * {display: block!important}
+.MJXp-mphantom {visibility: hidden}
+.MJXp-munderover {display: inline-table!important}
+.MJXp-over {display: inline-block!important; text-align: center}
+.MJXp-over > * {display: block!important}
+.MJXp-munderover > * {display: table-row!important}
+.MJXp-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXp-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXp-mtr {display: table-row!important}
+.MJXp-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXp-mtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-mlabeledtr {display: table-row!important}
+.MJXp-mlabeledtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mlabeledtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXp-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXp-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXp-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXp-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXp-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXp-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXp-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXp-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXp-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXp-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_PHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style></head><body><div id="MathJax_Message" style="display: none;"></div>
+    <header id="header"><div class="wrapper">
+      <h1 id="title"><a href="../">Phillip Mates</a></h1>
+
+      <ul id="navigation">
+        <li><a href="../blog">Blog</a></li>
+        <li><a href="../projects">Projects</a></li>
+        <li><a href="../publications">Pubs</a></li>
+      </ul>
+    </div></header>
+
+    <section id="main" class="wrapper">
+<article>
+    <h1>Contract Verification using Symbolic Execution</h1>
+
+    <p class="date">February 19, 2013</p>
+
+    <p>For <a href="http://www.ccs.neu.edu/home/shivers/">Olin Shiver</a>'s Program Analysis course this semester, I'm presenting a lecture on “<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">Higher-Order Symbolic Execution via Contracts</a>” by <a href="http://www.ccs.neu.edu/home/samth/">Sam Tobin-Hochstadt</a> and <a href="http://www.ccs.neu.edu/home/dvanhorn/">David Van Horn</a>.
+ I'm writing this post to prepare for my presentation, hence it is 
+mostly a reinterpretation of the paper mentioned. With that said, let's 
+get started!</p>
+<p>Adapting symbolic execution to work with contracts provides two main 
+gains: increasing the efficiency of running programs with contract and 
+allowing for modular program analysis.</p>
+<p>Programming with contracts enables programmers to provide rich 
+dynamic specifications to components. With the ease of writing 
+specifications dynamically comes the expense of checking them at 
+runtime. The ability to statically prove the absence of contract 
+violations would provide a large efficiency gain, enabling contract 
+checks excluded from the execution.</p>
+<p>Contracts also enable us to reason about modules in isolation, or 
+modularly, since they specify how two parties should interact at their 
+boundaries. As it turns out, analyzing modular programs is difficult! 
+Abstract interpretation for instance, cannot reason about concrete 
+function flowing into unknown contexts. Symbolic execution allows for 
+analysis in the presence of unknown components but often fails to offer 
+automatic, terminating analyses. If we can utilize abstract 
+interpretation and symbolic execution to verify contracts, we'll be left
+ with a modular and composable automatic program analysis.</p>
+<p>With these two problems in mind, let's delve into the intricacies of the paper. On a high level, [<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">1</a>]
+ extends CPCF, a language with contracts, to operate 
+(non-deterministically) over symbolic values (SCPCF) in order to soundly
+ discover blame. This is done by refining symbolic values with 
+successful contract checks and using those to skip future contract 
+checks.</p>
+<p>We'll start with an overview of contracts, move to an overview of 
+symbolic execution, and close with how the semantics of contract PCF is 
+extended to include symbolic values.</p>
+<h2 id="contracts">1. Introduction to Contracts</h2>
+<p>Contracts are executable specifications that enable blame to be 
+assigned to software components that violate defined specifications. At 
+the first-order level, blame assignment and checking of contracts is 
+simple, but higher-order contracts are limited by Rice's Theorem: it 
+isn't decidable whether a function argument adheres to its contract. 
+Hence higher-order values must be wrapped in a monitor that checks the 
+contract at each use. Monitors track agreements between parties as 
+higher-order values flow back and forth across component boundaries, 
+enabling blame to be assigned correctly.</p>
+<p>Summarizing from [<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">1</a>], CPCF is an extension of PCF, introduced by Dimoulas et al. [<a href="http://www.ccs.neu.edu/racket/pubs/esop12-dthf.pdf">7</a>], that enables contracts to wrap base values and first class functions.</p>
+<pre><code>Types       T ::= B | T → T | con(T)
+Base types  B ::= N | B
+Terms       E ::= A | X | E E | μ X:T . E | if E E E
+                | O<sub>1</sub>(E) | O<sub>2</sub>(E, E) | mon<sub>f</sub><sup>f,f</sup> (C, E)
+Operations O<sub>1</sub> ::= zero? | false? | ...
+           O<sub>2</sub> ::= + | - | ∧ | ∨ | ...
+Contracts   C ::= flat(E) | C → C | C → λ X:T . C
+Answers     A ::= V | ε[blame<sub>f</sub><sup>f</sup>]
+Values      V ::= λ X:T . E | 0 | 1 | -1 | ... | tt | ff
+Evaluation  ε ::= [] | ε E | V ε | O<sub>2</sub>(ε, E) | O<sub>2</sub>(V, ε)
+  contexts      | O<sub>1</sub>(ε) | if ε E E | mon<sub>h</sub><sup>f,g</sup>(C, ε)</code></pre>
+<p>There are three types of contracts: <code>flat(E)</code> wraps base values with a predicate defined in the CPCF language, <code>C<sub>1</sub> → C<sub>2</sub></code> is a function contract with the contract <code>C<sub>1</sub></code> for the function's argument, and <code>C<sub>2</sub></code> for the function's result, lastly <code>C<sub>1</sub> → λX.C<sub>2</sub></code> are dependent contracts where <code>X</code> binds the function's argument in the body of <code>C<sub>2</sub></code>.</p>
+<p>A contract <code>C</code> is attached to expression <code>E</code> using the monitor construct <code>mon<sub>h</sub><sup>f,g</sup> (C, E)</code>, where the labels <code>f</code>, <code>g</code> and <code>h</code> are used to blame specific components in the event of a contract failure. Label <code>f</code> names the server or the actual expression, <code>g</code> labels the client, or the context, and <code>h</code> names a contract, since contracts are arbitrary expressions, they can also be blamed. The labels in <code>blame<sub>g</sub><sup>f</sup></code> state that component <code>f</code> broke its contract with <code>g</code>.</p>
+<p>[<a href="http://www.ccs.neu.edu/racket/pubs/esop12-dthf.pdf">7</a>] 
+introduces complete monitors, which correctly monitor all channels of 
+communication between components, including contracts themselves. For 
+the sake of simplicity, we will work with lax contract semantics, which 
+is not a complete monitor, but is still blame correct.</p>
+<p>The reduction relation of CPCF is mostly standard, with the last two rules handling function and flat contract checks.</p>
+<pre><code>if tt E<sub>1</sub> E<sub>2</sub>                   ⟼ E<sub>1</sub>
+if ff E<sub>1</sub> E<sub>2</sub>                   ⟼ E<sub>2</sub>
+(λ X:T . E) V                 ⟼ E[V/X]
+μ X:T . E                     ⟼ E[μ X:T . E/X]
+O(V)                          ⟼ A if δ(O, V) = A
+mon<sub>h</sub><sup>f,g</sup>(C<sub>1</sub> → λ X:T . C<sub>2</sub>, V)     ⟼ λ X:T . mon<sub>h</sub><sup>f,g</sup> (C<sub>2</sub>, (V mon<sub>h</sub><sup>g,f</sup> (C<sub>1</sub>, X)))
+mon<sub>h</sub><sup>f,g</sup>(flat(E), V)            ⟼ if (E V) V blame<sub>h</sub><sup>f</sup></code></pre>
+<p>Function contracts are checked by reversing the monitor's blame 
+labels on the argument, since if it doesn't satisfy the domain of the 
+function contract, it is the context's fault. The monitor of the 
+computation's result retains its original blame labels since a result 
+that doesn't satisfy the range of the contract is the function's fault. 
+Flat contract checking involves checking the value against the contract 
+in an <code>if</code> expression, raising blame if the contract isn't satisfied.</p>
+<p>Here is a simple example adapted from [<a href="http://www.ccs.neu.edu/racket/pubs/icfp2002-ff.pdf">9</a>] that shows why label reversal happens for higher-order contracts:</p>
+<pre class="sourceCode Scheme"><code class="sourceCode scheme"><span class="co">;; foo : (Int → Int) → Int</span>
+<span class="co">;; with contract: ((greater-than-9? → between-0-and-10?) → between-10-and-20?)</span>
+(<span class="kw">define</span><span class="fu"> foo </span>(λ (bar) (<span class="kw">+</span> <span class="dv">10</span> (bar <span class="dv">0</span>))))</code></pre>
+<p>When <code>foo</code> invokes <code>bar</code>, <code>foo</code>'s <code>greater-than-9?</code> contract fails, but this is due to <code>foo</code> supplying the incorrect value to <code>bar</code>. The <code>greater-than-9?</code> contract is to the left of two arrows in <code>foo</code>'s
+ contract, and is said to be in an even position. Base contracts in even
+ position have had their blame labels reversed by the reduction relation
+ an even number of times, so blame will always go to the function.</p>
+<p>On the other hand, if we imagine that <code>foo</code> applies <code>bar</code> to <code>10</code> and it returns <code>-10</code>, then this will violate <code>between-0-and-10?</code>,
+ which is to the left of one arrow, and thus in an odd position. Being 
+in an odd position means that the reduction relation has reversed the 
+blame labels an odd number of times, leaving blame to be assigned to the
+ context that provided the <code>bar</code> argument.</p>
+<p>From here [<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">1</a>]
+ introduces SCPCF, an extension of CPCF that include symbolic values. 
+Before we get into that, I'd like to cover the basics of symbolic 
+execution.</p>
+<h2 id="symb">2. Introduction to Symbolic Execution</h2>
+<p>Symbolic execution is a form of program analysis that lies between 
+the extremes of testing a program and proving it correct. The idea is to
+ generalize the notion of testing a program on concrete inputs by 
+replacing them with symbolic input variables. These symbolic variables 
+represent a broad class of concrete inputs. Hence, the result of a 
+program's symbolic execution is equivalent to a large number of normal 
+test cases run over that program.</p>
+<p>To run a program symbolically, the execution semantics of the 
+language must be extended to let operators work on symbolic inputs, 
+producing symbolic formulas as output. Symbolic inputs are arbitrary 
+symbols, and symbolic formulas are manipulations over these symbols, 
+suited to capture data-specific information. If we are trying to 
+symbolically executing arithmetic operations, the formulas outputted by 
+symbolic operations will be algebraic formulas, enabling us to leverage 
+algebraic simplifications. For instance, extending the concrete version 
+of <code>+</code>, <code>δ(+, 4, 5) = 9</code>, to operate over symbolic values returns an algebraic equation: <code>δ(+, α<sub>1</sub>, α<sub>2</sub>) = α<sub>1</sub> + α<sub>2</sub></code>.</p>
+<p>Let's look at the following simple arithmetic function:</p>
+<pre class="sourceCode Scheme"><code class="sourceCode scheme"><span class="co">;; doubleFirst :: Int -&gt; Int -&gt; Int</span>
+(<span class="kw">define</span><span class="fu"> </span>(doubleFirst x y)
+  (<span class="kw">let</span> ([z (<span class="kw">+</span> x y)])
+    (<span class="kw">+</span> x (<span class="kw">-</span> z y))))</code></pre>
+<p>Executing the it with concrete values, <code>(doubleFirst 4 5)</code>, leaves us with the following variable assignments: <code>x = 4, y = 5, z = 9, return = 8</code>. With the symbolic execution <code>(doubleFirst α<sub>1</sub> α<sub>2</sub>)</code>, the function's variables are assigned to the following algebraic formulas <code>x = α<sub>1</sub>, y = α<sub>2</sub>, z = α<sub>1</sub> + α<sub>2</sub>, return = α<sub>1</sub> + α<sub>1</sub></code>.</p>
+<p>So far, the symbolic execution we've described can only handle 
+programs with linear control flow. How do we handle branching operations
+ in the presence of symbolic values? Symbolic values generally won't 
+have enough constraints to determine which branch of a branching 
+operation to take, hence we need to add the <em>path conditional</em> (<code>pc</code>)
+ to our program's execution state. The path conditional is a boolean 
+expression over symbolic values that accumulates constraints which must 
+be satisfied in order for the execution to follow the associated path.</p>
+<p>Let's run through a symbolic execution of the <code>divCond</code> function below instantiated with symbolic values <code>α<sub>1</sub></code> and <code>α<sub>2</sub></code> and starting with <code>pc = true</code>.</p>
+<pre class="sourceCode Scheme"><code class="sourceCode scheme"><span class="co">;; divCond :: Int -&gt; Int -&gt; Int</span>
+(<span class="kw">define</span><span class="fu"> </span>(divCond x y)
+  (<span class="kw">if</span> (== y <span class="dv">10</span>)
+    (<span class="kw">if</span> (== x <span class="dv">0</span>)
+      (error <span class="st">"div by zero"</span>)
+      (<span class="kw">/</span> y x))
+    x))</code></pre>
+<p>At the <code>(== y 10)</code> expression, <code>y = α<sub>2</sub></code>, so we don’t have enough information to branch on it, hence we must fork:</p>
+<ul>
+<li>For the “then” case we set <code>pc = true ∧ (α<sub>2</sub> == 10)</code> and process the <code>(if (== x 0) ...)</code> expression, where:
+<ul>
+<li>in the “then” case <code>pc = true ∧ (α<sub>2</sub> == 10) ∧ (α<sub>1</sub> == 0)</code> and an error is raised</li>
+<li>in the “else” case <code>pc = true ∧ (α<sub>2</sub> == 10) ∧ (α<sub>1</sub> != 0)</code> and a division is computed</li>
+</ul></li>
+<li>the “else” case <code>pc = true ∧ (α<sub>2</sub> != 10)</code> and we return <code>x</code>, which is set to <code>α<sub>1</sub></code></li>
+</ul>
+<p>At this point, you might be wondering how such obvious properties could be useful?</p>
+<p>Godefroid, Klarlund and Sen [<a href="https://research.microsoft.com/en-us/um/people/pg/public_psfiles/pldi2005.pdf">4</a>]
+ use randomized program testing paired with symbolic execution to 
+efficiently generate concrete test inputs with complete code coverage. 
+The idea is to run the program on randomized input while keeping track 
+of the path conditional. This execution will cover one path through the 
+program, but they are seeking complete path coverage, so they backtrack 
+to the last place where a constraint was added to the <code>pc</code>, negate that constraint and generate new test input that satisfies the new <code>pc</code>.
+ When the program is run on this new test input, it will take go down 
+the other branch of the last conditional, covering an additional path. 
+Repeating this process and generating concrete test inputs for each path
+ through a program results in a minimal set of path covering test 
+inputs.</p>
+<p>Cousot, Cousot, Fähndrich and Logozzo [<a href="http://research.microsoft.com/pubs/174239/paper.pdf">5</a>] use abstract interpretation, a technique similar to symbolic execution, to infer <em>necessary preconditions</em>
+ to functions in a 1st order setting. By necessary precondition, we mean
+ the smallest possible precondition, which when violated will definitely
+ result in an error. The general idea behind their approach, which can 
+be described in terms of symbolic execution, is to identify the set of 
+path conditions that lead to errors, negate them and set them as 
+preconditions to the function. Take for example the symbolic execution 
+of <code>divCond</code>, the only error occurs when the <code>pc</code> is <code>(α<sub>2</sub> == 10) ∧ (α<sub>1</sub> == 0)</code>, thus the necessary precondition for <code>divCond</code> is <code>¬((y == 10) ∧ (x == 0))</code>.</p>
+<p>In general, symbolic execution is used widely in model checking and 
+test case generation. Now let's move on to how it can be leveraged to 
+verify contracts.</p>
+<h2 id="contract-symb">3. Contracts as symbolic values</h2>
+<p>We are looking to be able to verify that the composition of known and
+ unknown program components respects their specifications. To accomplish
+ this, [<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">1</a>] introduces the notion of symbolic values to CPCF, creating SCPCF. These symbolic values, denoted by <code>●<sup>T</sup></code>, represent unknown values of type <code>T</code>. They have arbitrary behavior of type <code>T</code>,
+ which is then refined “by attaching a set of contracts that specify an 
+agreement between the program and the missing component”.</p>
+<pre><code>Prevalues      U ::= ●<sup>T</sup> | λ X:T . E | 0 | 1 | -1 | ... | tt | ff
+Values         V ::= U/Ç    where Ç = {C,...}</code></pre>
+<p>Prevalues are the normal values of CPFC extended with the symbolic <code>●<sup>T</sup></code>. Values are prevalues extended with a set of contracts. Notationally, <code>V ∙ C</code> will be used to represent <code>U/Ç ∪ {C}</code> where <code>V = U/Ç</code>, and <code>Ç</code> will be omitted from values wherever irrelevant.</p>
+<p>The goal is to define the semantics of SCPCF to run with unknown 
+values such that it soundly approximates running the same program with 
+concrete values. More formally, the semantics are sound, or preserve 
+approximation, if given <code>⊢ V:T ⊑ ●<sup>T</sup></code> and <code>ε[V] ⟼* A</code>, then <code>ε[●<sup>T</sup>] ⟼* A'</code> and <code>A ⊑ A'</code>, that is, <code>A'</code> approximates <code>A</code>.
+ Hence, we can run a program with unknown values, and if it doesn't 
+raise blame, then we know that a concrete instantiation of that program 
+will also not raise blame.</p>
+<h2 id="scpcf-semantics">4. SCPCF Semantics</h2>
+<p>We extend the semantics much like described in <a href="#symb">§2</a>, but with some key differences:</p>
+<pre><code>if V E<sub>1</sub> E<sub>2</sub>      ⟼ E<sub>1</sub>   if δ(false?, V) ∋ ff
+if V E<sub>1</sub> E<sub>2</sub>      ⟼ E<sub>2</sub>   if δ(false?, V) ∋ tt
+(λ X:T . E) V   ⟼ E[V/X]
+μX:T.E          ⟼ E[μX:T . E/X]
+O(V)            ⟼ A if δ(O, V) ∋ A
+(●<sup>T→T'</sup>/Ç) V     ⟼ ●<sup>T'</sup>/{C<sub>2</sub>[V/X] | C<sub>1</sub> → λ X:T . C<sub>2</sub> ∈ Ç}
+(●<sup>T→T'</sup>/Ç) V     ⟼ havoc<sub>T</sub> V</code></pre>
+<p>Before <code>δ</code> mapped arithmetic operations to algebraic equations, which satisfy multiple concrete answers. We let the <code>δ</code>
+ of SCPCF map operations and arguments to sets of answers. Concrete 
+arguments map to concrete singleton sets while symbolic arguments map to
+ more abstract sets, for instance <code>δ(+, V1, V2) = {●<sup>N</sup>}</code>, if <code>V1</code> or <code>V2 = ●<sup>N</sup>/Ç</code></p>
+<p>Due to the change of <code>δ</code>, branching becomes non-deterministic in the presence of symbolic values, similar to <a href="#symb">§2</a>.
+ Unlike before though, we don't add information to the path condition at
+ branches. This is because we aren't really concerned about gathering 
+constraints on symbols at the term level, but rather at the contract 
+level.</p>
+<p>That said, since contracts use the same language as terms, the theory in [<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">1</a>]
+ could be made more precise if branches hoisted their predicates into 
+contracts and added them to the path condition upon non-deterministic 
+forks. For instance, given <code>foo = ●<sup>N</sup></code> and that <code>sqrt</code> has the contract <code>flat(positive?) → flat(positive?)</code>, then <code>(if (positive? foo) (sqrt foo) 0)</code> cannot be verified using [<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">1</a>] unless evaluating <code>(positive? foo)</code> resulted in <code>foo ∙ flat(positive?)</code></p>
+<p>The last two rules of the SCPCF semantics deal with applying symbolic
+ functions. There are two possible outcomes when a argument <code>V</code> is passed to an unknown function <code>●<sup>T→T'</sup></code>:</p>
+<ul>
+<li><code>V</code> is used in an unknown manner, but when <code>V</code> is used, it returns with no failures. Hence the result of the use of <code>V</code> is refined by the range of the contracts over the function <code>V</code>.</li>
+<li>Alternatively, the usage of <code>V</code> in an unknown context results in the blame of <code>V</code>. Possible blame is found using the <code>havoc</code> function, which explores the behavior of <code>V</code> by iteratively applying it to unknown values.</li>
+</ul>
+<pre><code>havoc<sub>B</sub>    = μx.x
+havoc<sub>T→T'</sub>  = λx:T → T' . havoc<sub>T'</sub>(x ●<sup>T</sup>)</code></pre>
+<p>Values of base type can't raise blame in an unknown context, since 
+their contract has already been satisfied when they were passed into the
+ unknown context. Thus, <code>havoc<sub>B</sub></code> diverges as a means to not introduce spurious results. At the function type, <code>havoc</code>
+ “produces a function that applies its argument to an appropriately 
+typed unknown input value and then recursively applies havoc at the 
+result type to the output”. This soundly explores possible blame 
+behavior of values in unknown “demonic” contexts.</p>
+<p>Let's slowly work through the example presented in [<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">1</a>] to see how <code>havoc</code> will discover blame, if it exists:</p>
+<p>Let <code>hoExample</code> be a higher-order function with the contract <code>(any→any)→any</code> and let <code>sqrt</code> have the contract <code>positive? → positive?</code>.</p>
+<pre><code>hoExample:(N→N)→N =
+  λ f:N→N . mon(any,
+                (λ f:N→N . (sqrt (f 0))) (λ x:N mon(any, f mon(any, x))))</code></pre>
+<p>We want to check that in any arbitrary context, <code>hoExample</code> cannot be blamed, hence we pass it to <code>havoc((N→N)→N)</code>.</p>
+<pre><code>1.  havoc<sub>(N→N)→N</sub> hoExample
+2.  havoc<sub>N</sub> (hoExample ●<sup>N→N</sup>)
+3.         mon(any, (λ f:N→N . (sqrt (f 0))) (λ x:N mon(any, ●<sup>N→N</sup> mon(any, x))))
+4.                  (sqrt ((λ x:N mon(any, ●<sup>N→N</sup> mon(any, x))) 0))
+5.                  (sqrt mon(any, ●<sup>N→N</sup> mon(any, 0)))
+6.                  (sqrt mon(any, (●<sup>N→N</sup> 0)))
+7a.  ...     ...    (sqrt havoc<sub>N</sub> 0)
+7b.                 (sqrt ●<sup>N</sup>∙any)
+8.                  ((λ x:N . mon(positive?, sqrt mon(positive? x))) ●<sup>N</sup>∙any)
+9.                  mon(positive?, sqrt mon(positive?, ●<sup>N</sup>∙any))
+10. havoc<sub>N</sub> mon(any, blame hoExample)</code></pre>
+<p>In step 2, <code>havoc</code> applies <code>●<sup>N→N</sup></code> to <code>hoExample</code>, using <code>havoc<sub>N</sub></code> to ensure divergence if no blame is found. Step 3 and 4 substitute <code>●<sup>N→N</sup></code> into <code>hoExample</code>, wrapping it in a <code>any→any</code> monitor. <code>0</code> passes the <code>any</code> contract in steps 5 and 6. In step 7, the evaluation of the symbolic function <code>●<sup>N→N</sup></code> applied to <code>0</code> introduces a fork in the reduction relation: on one branch <code>havoc<sub>N</sub></code> is applied to <code>0</code> to check if it introduces blame, and on the other, <code>(●<sup>N→N</sup> 0)</code> evaluates with no blame, resulting in <code>●<sup>N</sup>∙any</code>. <code>havoc<sub>N</sub> 0</code> diverges, so we continue with the second branch. In step 8 and 9 <code>●<sup>N</sup>∙any</code> is passed to <code>sqrt</code>, but the contract check <code>(positive? ●<sup>N</sup>∙any)</code> both passes and raises blame, so validation of <code>hoExample</code> fails.</p>
+<p>If we change <code>hoExample</code>’s contract to <code>(any→positive?)→any</code>, then in step 7b the symbolic value <code>●<sup>N</sup></code> would be refined with the contract <code>positive?</code>, enabling the contract check of step 9 to pass. This is made possible with the introduction of the <code>⊢ V : C ✓</code> relation presented below.</p>
+<h2 id="checking-scpcf">5. Contract checking in SCPCF</h2>
+<p>Adding non-deterministic branching at <code>if</code> statements in 
+the presence of symbolic values means that the semantics of flat 
+contract checking becomes quite imprecise, if left as is. Using the 
+contract checking semantics of <a href="#contracts">§1</a> with symbolic values means that the following expression will incorrectly raise blame twice:</p>
+<p><code>(mon<sub>h</sub><sup>f,g</sup> (flat(prime?) → flat(even?), primePlus1)) (mon<sub>h</sub><sup>f,g</sup> (flat(prime?) ●<sup>N</sup>))</code></p>
+<p>Once when monitoring <code>●<sup>N</sup></code> to see if it satisfies <code>flat(prime?)</code>, which results in both success and failure since <code>(prime? ●<sup>N</sup>) = {tt, ff}</code>, and the other when <code>●<sup>N</sup></code> is checked to satisfy the domain of <code>flat(prime?) → flat(even?)</code>, as it’s passed to <code>primePlus1</code>.</p>
+<p>To remedy this, we set up the path condition to keep track of when 
+symbolic values satisfy a given contract. With this information, future 
+contract checks can be ruled out, thus eliminating non-deterministic 
+branching and unsound blame.</p>
+<p>The path condition in [<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">1</a>] is formulated by refining symbolic values with contracts (<code>V∙C</code>) once a flat contract check passes. This information is then used in the following judgement relation, which says that <code>V</code> provably satisfies the contract <code>C</code>:</p>
+<pre><code>   C ∈ Ç
+───────────
+ ⊢ V : C ✓</code></pre>
+<p>With these additions we can modify the contract checking semantics, 
+remembering successful contract checks and avoiding the imprecision 
+introduced by redundant contract checks:</p>
+<pre><code>mon<sub>h</sub><sup>f,g</sup> (C,V)                 ⟼ V if ⊢ V : C ✓
+mon<sub>h</sub><sup>f,g</sup> (flat(E),V)           ⟼ if (E V)
+                                  (V ∙ flat(E))    | where ⊬ V : flat(E) ✓
+                                  blame<sub>g</sub><sup>f</sup>           |
+mon<sub>h</sub><sup>f,g</sup> (C<sub>1</sub> ⟼ λ X:T . C<sub>2</sub>, V) ⟼ λ X:T . mon<sub>h</sub><sup>f,g</sup> (C<sub>2</sub>, V mon<sub>h</sub><sup>g,f</sup> (C<sub>1</sub>, X))
+                                   where ⊬ V : C<sub>1</sub> ⟼ λ X:T . C<sub>2</sub> ✓</code></pre>
+<h2 id="soundness-scpcf">6. Soundness of SCPCF</h2>
+<p>As noted in <a href="#cont">§3</a>, we are striving for a symbolic 
+execution semantics that soundly approximates the concrete execution 
+semantics. By sound approximation we mean that if the symbolic semantics
+ doesn't raise blame during an execution, then the concrete semantics is
+ guaranteed to also not raise blame. Of course it is an approximation, 
+so it is acceptable for the symbolic semantics to find blame when it 
+doesn't actually exists.</p>
+<p>In order to prove that the symbolic execution semantics soundly 
+approximates the concrete execution semantics when concerned with blame,
+ we develop an approximation relation <code>⊑</code> where <code>A ⊑ A'</code> means that <code>A'</code> approximates, or is less precise than <code>A</code>:</p>
+<pre><code>                  ⊢ V : T
+                 ──────────        ───────────────────
+                  ⊢ V ⊑ ●<sup>T</sup>          mon(C, E) ⊑ ● ∙ C
+
+                          ⊢ V : C ✓             mon(C, E) ⊑ E'
+     ───────────         ───────────       ────────────────────────
+      V∙C ⊑ V              V ⊑ V∙C          mon(C, E) ⊑ mon(C, E')
+
+           ──────────────────────────────────────────────────
+            (λ X . mon(D, (V mon(C, X)))) ⊑ ● ∙ C → λ X . D</code></pre>
+<p>From top to bottom, left to right, the rules are as follows:</p>
+<ul>
+<li>unknown values of type T approximate concrete values of type T</li>
+<li>unknown values refined by a contract approximate expressions monitored with the same contract</li>
+<li>contract refinements may be introduced on the value being approximated</li>
+<li>refinements may be eliminated from the approximating value when that value already proves the contract</li>
+<li>a contract monitor may be introduced to the approximation expression
+ if the expression already approximates a value wrapped in the same 
+contract monitor</li>
+<li>unknown values refined with function contracts approximate a value monitored by a partially evaluated function contract</li>
+</ul>
+<p>The soundness theorem:</p>
+<pre><code>E ⊑ E' ∧ E ⟼* A implies ∃ A' . E' ⟼* A' ∧ A ⊑ A'</code></pre>
+<p>is proved by case analysis on the reduction semantics and utilizing 
+havoc's completeness, as well as auxiliary lemmas that ensure 
+substitution and basic operations preserve approximation. By havoc's 
+completeness, we mean <code>ε[V] ⟼* ε'[blame l]</code> where <code>l</code> is not in <code>ε</code>, then <code>havoc V ⟼* ε''[blame l]</code>.</p>
+<p>As a small aside, last semester I used Coq to prove that a 
+non-deterministic semantics for a simple, typed language with unknown 
+values (<code>●<sup>T</sup></code>) soundly approximates its concrete counterpart (<a href="https://github.com/philomates/black-hole-analysis">coq code on github</a>).</p>
+<p>And that is pretty much it! The symbolic semantics are not guaranteed to terminate, so the authors of [<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">1</a>] integrate the orthogonal technique of abstracting abstract machines [<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/vanhorn-might-cacm11.pdf">8</a>]. Additionally, [<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">1</a>]
+ goes on to extend their technique to an untyped core model of Racket, 
+which makes things more complicate in the absence of type information.</p>
+<h2 id="conc">8. Conclusion</h2>
+<p>In this post I've presented the fundamental ideas from “<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">Higher-Order Symbolic Execution via Contracts</a>” by <a href="http://www.ccs.neu.edu/home/samth/">Tobin-Hochstadt</a> and <a href="http://www.ccs.neu.edu/home/dvanhorn/">Van Horn</a>.</p>
+<p>This paper introduced the idea of a modular analysis for programs 
+with higher-order contracts that enables contract verification in the 
+presence of unknown components. Such a verification enables the safe 
+omission of select contract checks and also provides an analysis where 
+individual components can be verified for later composition. Symbolic 
+execution with contracts as symbol refinements is the secret weapon, 
+with other key components being demonic contexts (<code>havoc</code>) to discover blame, the approximation relation (<code>⊑</code>) to prove soundness, and abstract interpretation to guarantee termination.</p>
+<p>Possible future work:</p>
+<ul>
+<li>Adapting the work on necessary precondition inference by [<a href="http://research.microsoft.com/pubs/174239/paper.pdf">5</a>]
+ to work in a higher-order setting. This could be used to strengthen the
+ contracts of known components so that their composition with unknown 
+components can be successfully verified.</li>
+<li>Hoisting arbitrary predicate checks to the contract level and adding
+ them to the path condition, or contract set of a value, as described in
+ <a href="#scpcf-semantics">§4</a>.</li>
+</ul>
+<p>Questions:</p>
+<ul>
+<li>How does symbolic execution traditionally deal with non-termination?</li>
+<li>Can havoc be made more precise by integrating path covering test case generation similar to [<a href="https://research.microsoft.com/en-us/um/people/pg/public_psfiles/pldi2005.pdf">4</a>]?</li>
+<li>Would weakening of contracts ever increase the ability of the analysis to verify a component's contracts?</li>
+</ul>
+<h2 id="links">Links</h2>
+<ul>
+<li>[1] “<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/tobin-hochstadt-vanhorn-oopsla12.pdf">Higher-Order Symbolic Execution via Contracts</a>” by Tobin-Hochstadt and Van Horn 2012</li>
+<li>[2] “<a href="http://www.cs.uiuc.edu/class/sp11/cs477/king76symbolicexecution.pdf">Symbolic Execution and Program Testing</a>” by King 1976</li>
+<li>[3] “<a href="http://users.eecs.northwestern.edu/%7Erobby/pubs/papers/fb-tr2006-01.pdf">Contracts as Pairs of Projections</a>” by Findler and Blume 2006</li>
+<li>[4] “<a href="https://research.microsoft.com/en-us/um/people/pg/public_psfiles/pldi2005.pdf">DART: Directed Automated Random Testing</a>” by Godefroid, Klarlund and Sen 2005</li>
+<li>[5] “<a href="http://research.microsoft.com/pubs/174239/paper.pdf">The Design and Implementation of a System for the Automatic Inference of Necessary Preconditions</a>” by Cousot, Cousot, Fähndrich and Logozzo 2013</li>
+<li>[6] “<a href="http://www.cs.purdue.edu/homes/zhu103/pubs/vmcai13.pdf">Compositional and Lightweight Dependent Type Inference for ML</a>” by Zhu and Jagannathan 2013</li>
+<li>[7] “<a href="http://www.ccs.neu.edu/racket/pubs/esop12-dthf.pdf">Complete Monitors for Behavioral Contracts</a>” by Dimoulas, Tobin-Hochstadt, and Felleisen 2012</li>
+<li>[8] “<a href="http://www.ccs.neu.edu/home/dvanhorn/pubs/vanhorn-might-cacm11.pdf">Abstracting Abstract Machines</a>” by Might and Van Horn 2011</li>
+<li>[9] “<a href="http://www.ccs.neu.edu/racket/pubs/icfp2002-ff.pdf">Contracst for Higher-Order Functions</a>” by Findler and Felleisen 2002</li>
+</ul>
+</article>
+</section>
+
+<footer id="footer" class="wrapper">
+</footer>
+
+
+    <script src="../MathJax.js" id=""></script>
+
+</body></html>

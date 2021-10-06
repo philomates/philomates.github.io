@@ -1,0 +1,25 @@
+{% extends "/html/base.html" %}
+{%block subtitle %}: Archives{% endblock %}
+{% block content %}
+
+<section id="main" class="wrapper">
+  <br>
+<section id="articles-listing">
+    {% for group in groups %}
+        <h2>{{group.group}}</h2>
+        {% for post in group.posts %}
+          <article>
+            <h3><a href="{{post.uri}}">{{post.title}}</a></h3>
+            <p class="date">{{post.date|date:"MMM dd"}}</p>
+            <p class="summary">{{post.description}}</p>
+          </article>
+        {% endfor %}
+    {% endfor %}
+</section>
+</section>
+<footer id="footer" class="wrapper">
+                <a href="{{rss-uri}}">
+
+                  <img title="RSS" alt="RSS" src="/img/atom.gif" width=15px/> RSS</a>
+</footer>
+{% endblock %}
