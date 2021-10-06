@@ -6,7 +6,7 @@
 
 
 <div class="image imageright">
-<img title="Phillip Mates" alt="Phillip Mates" src="https://philomates.github.io/phillip.jpg" width="250px">
+<img title="Phillip Mates" alt="Phillip Mates" src="/img/phillip.jpg" width="250px">
 </div>
 
 <p><a href="/files/mates_cv.pdf">CV</a> | <a href="https://github.com/philomates">GitHub</a> | <a href="https://twitter.com/philomates">Twitter</a>
