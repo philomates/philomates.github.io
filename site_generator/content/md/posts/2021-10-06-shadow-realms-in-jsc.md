@@ -8,19 +8,23 @@ I'm super excited to have recently joined the Compilers team at [Igalia](https:/
 
 When I initially joined in August 2021, I started with some exploratory escape analysis optimization work in V8 JS engine. We shelved that work for now and I jumped over to my first proper project: implementing the Shadow Realm proposal in JSC.
 
-With the initial implementation submitted for review I figured it would be a good time to explain a bit about Shadow Realms and how to implement new JavaScript features in JSC.
+With an initial implementation submitted for review, which was developed in collaboration with fellow Igalian [Caio Lima](https://caiolima.github.io/), I figured it would be a good time to explain a bit about Shadow Realms and how to implement new JavaScript features in JSC.
 
 ## The Shadow Realm
 
-Before we get into some JSC internals, let's have some context on the feature itself. 
+Before we get into some JSC internals, let's have some context on the feature itself.
 
 [Shadow Realms](https://github.com/tc39/proposal-shadowrealm/blob/main/explainer.md) is a new JS isolation primitive being proposed in TC39 that can be used for building more reliable isolation and sandboxing libraries.
+
+Igalia's work on the Shadow Realm implementation is in partnership with SalesForce. As a platform on the web, SalesForce allows users to share and run custom code, thus proper isolation primitives in JavaScript are of particular interest to SalesForce. Over several years SalesForce, Igalia, and other TC39 contributors iterated on and refined the Shadow Realm proposal. When it came time to implement the proposal in various JavaScript engines, SalesForce sponsored our team to work on it.
 
 ### background
 
 JS is a pretty dynamic place to hang, to say the least. When you load code from various libraries there is always the possibility that they patch something in the prototype chain in a way that is dangerous to other libraries. If you have control over the libraries you're including, you can audit and test things to mitigate this. On the otherhand if you want to have a user-contributed plugin system, a reliable testing environment, or things like DOM virtualization ([more context here](https://github.com/tc39/proposal-shadowrealm/blob/main/explainer.md#use-cases)), you need proper isolation primitives.
 
 It turns out that providing code evaluation isolation in pure JavaScript is very difficult. Figma has [a nice blog post](https://www.figma.com/blog/how-we-built-the-figma-plugin-system/) exploring some of these difficulties and [how they ran into issues](https://www.figma.com/blog/an-update-on-plugin-security/) with an early JS-based Shadow Realm shim. Another focused effort on sandbox and isolation in JS is SalesForce's Lightning Locker.
+
+JavaScript iframes are an existing way to offer some level of isolation but they can be heavy-weight and tricky to use. Web workers are another alternative but only offer asynchronous execution which isn't compatible with the APIs that most 3rd party plugin systems want to provide. Hence the investment in developing a new JS isolation primitive.
 
 ### basic API
 
@@ -95,13 +99,13 @@ Creating a new global object was straightforward to setup ([code link](https://g
 
 Enforcing the callable boundary meant wrapping functions passed between realms with boundary-checks that are made when the function is invoked. I looked for other instances where functions might be wrapped and found that `bind` JS feature, which allows for partial argument application, fit that criteria. A bulk copy-and-rename of the `bind` implementation in JSC got me to a working implementation ([code link](https://github.com/WebKit/WebKit/commit/9a72749bf1dc13b02cde128c6bf194eacaad7ab6#diff-6b88bb093382d8d3ea5bd4636b653ecd2dceb06f4719ff52f96468bd6fa5da89))
 
-With these existing examples to draw from I was able to stumble my way into a working implementation. From there, we at Igalia shared the approach with the JSC team at Apple. In talking with them we learned that `JSBoundFunction`, of which I based `ShadowRealmWrappedFunction`, isn't really optimized in the different JIT tiers. Thus, my wrapped functions also wouldn't be, at least without a bunch of extra work. 
+With these existing examples to draw from I was able to stumble my way into a working implementation. From there, we at Igalia shared the approach with the JSC team at Apple. In talking with them we learned that `JSBoundFunction`, of which I based `ShadowRealmWrappedFunction`, isn't really optimized in the different JIT tiers. Thus, my wrapped functions also wouldn't be, at least without a bunch of extra work.
 
 The Apple JSC team had a unsubmitted patch to reimplement `bind` using JS built-ins, by way capturing bound arguments via closure functions, to re-use normal VM optimizations for JS functions. They suggested also trying to implement shadow realms and boundary-check wrappers using the JS built-in approach.
 
 ### the JS built-ins approach
 
-The JSC VM is written in C++, so you can naturally do all your implementation work there. The other option though is to register JS code (JS built-ins) as implementations. 
+The JSC VM is written in C++, so you can naturally do all your implementation work there. The other option though is to register JS code (JS built-ins) as implementations.
 
 So for instance, earlier in the C++ version we registered the implementation for `ShadowRealm.prototype.evaluate` and `ShadowRealm.prototype.importValue` [like this](https://github.com/WebKit/WebKit/commit/9a72749bf1dc13b02cde128c6bf194eacaad7ab6#diff-bc93bf5bf17a9cf421eccdcf9a9d2e9ea2e0848ebc6095019cf0d7d719260bc6R34-R35). Adapting the implementation to a JS built-in version, we'd then have something [like this](https://github.com/WebKit/WebKit/compare/main...philomates:shadow-realm-patch-iii?expand=1#diff-e2238cb47ef2f02dfb6ee7931d65ef54f9abaf17c04d853be882aa735fb60f91R42-R45), which points to [`builtins/ShadowRealmPrototype.js`](https://github.com/WebKit/WebKit/compare/main...philomates:shadow-realm-patch-iii?expand=1#diff-8738ecbd2550f772286c7dc71027232a17ea365e92407da5050f844bc4f25b11R46-R84).
 
@@ -113,7 +117,7 @@ V8 also took this approach in the past but deprecated it in favor of CodeStubAss
 
 #### JS built-ins calling host C++ code
 
-In terms of implementing the Shadow Realms spec, some things can be implemented as JS built-ins and benefit from doing so, such as the callable bounadary wrappers. Yet other aspects can't really be expressed in JS and require work at the C++ level, such as creation of custom global objects, as well as evaluating code in the context of these particular global objects. Thus it is helpful to be able to call back and forth from both. 
+In terms of implementing the Shadow Realms spec, some things can be implemented as JS built-ins and benefit from doing so, such as the callable bounadary wrappers. Yet other aspects can't really be expressed in JS and require work at the C++ level, such as creation of custom global objects, as well as evaluating code in the context of these particular global objects. Thus it is helpful to be able to call back and forth from both.
 
 The JS-based implementation of `ShadowRealm.prototype.evaluate` first calls to the `@evalInRealm` host function that we implement in C++ [here](https://github.com/WebKit/WebKit/compare/main...philomates:shadow-realm-patch-iii?expand=1#diff-e2238cb47ef2f02dfb6ee7931d65ef54f9abaf17c04d853be882aa735fb60f91R86). This implementation allows us to use the shadow realm instance's global object in non-standard ways, like as the context with whitch to do code evaluation. The result of this code evaluation is then wrapped using `@wrap`, which is also a JS-based implementation defined [here](https://github.com/WebKit/WebKit/compare/main...philomates:shadow-realm-patch-iii?expand=1#diff-8738ecbd2550f772286c7dc71027232a17ea365e92407da5050f844bc4f25b11R26-R44).
 
