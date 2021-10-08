@@ -66,13 +66,19 @@ First you need to populate the cache with a run with:
 $ mktemp -d -t bytecode-cacheXXXXXX
 /tmp/bytecode-cacheJzazAI
 
-$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 --useFTLJIT=true --useShadowRealm=1 ~/igalia/WebKit/JSTests/stress/shadow-realm-evaluate.js --diskCachePath=/tmp/bytecode-cacheJzazAI
+$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true \
+                        --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 \
+                        --useFTLJIT=true --useShadowRealm=1 ~/igalia/WebKit/JSTests/stress/shadow-realm-evaluate.js \
+                        --diskCachePath=/tmp/bytecode-cacheJzazAI
 ```
 
 Then you need to force usage of the cache with a run with:
 
 ```
-$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 --useFTLJIT=true --useShadowRealm=1 ~/igalia/WebKit/JSTests/stress/shadow-realm-evaluate.js --diskCachePath=/tmp/bytecode-cacheJzazAI --forceDiskCache=1
+$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true \
+                        --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 \
+                        --useFTLJIT=true --useShadowRealm=1 ~/igalia/WebKit/JSTests/stress/shadow-realm-evaluate.js \
+                        --diskCachePath=/tmp/bytecode-cacheJzazAI --forceDiskCache=1
 ```
 
 With that setup you can interate more quickly on bytecode cache related issues without relying on the slowness of the whole harness.
