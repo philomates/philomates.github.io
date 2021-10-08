@@ -97,13 +97,11 @@ ERROR: Unchecked JS exception:
         (ExceptionScope::m_recursionDepth was 5)
 ```
 
-Instead of the common C++ `try`-`catch` expressions, JSC has a lot of custom macros for dealing with exceptions: `DECLARE_THROW_SCOPE`, `RETURN_IF_EXCEPTION`, `RELEASE_AND_RETURN`, and more.
+As far as I understand, this validation failure is result of not properly doing a certain exception book-keeping dance.
+This dance replaces the more common `try`-`catch` manner of exception handling with a few macros (such as `DECLARE_THROW_SCOPE`, `RETURN_IF_EXCEPTION`, `RELEASE_AND_RETURN`). These macros help ensure you explicitly consider any JS exceptions that can arise from calling into a function that can throw.
 
-Let's unpack these macros to get a feel for what this validation failure means.
-
-As far as I understand, this validation failure is part of a book-keeping dance to ensure you always consider JS exceptions that can arise from calling into a function that can throw.
-This is needed because JS exceptions inside the JSC engine don't explicitly interrupt the C++ control flow, like normal C++ exceptions, but are rather registered with the VM instance.
-They are exceptions nonetheless and subsequent control-flow logic usually needs to respond to their presence, hence all these macros to help with this.
+This is consideration is needed because JS exceptions inside the JSC engine don't explicitly interrupt the C++ control flow, like normal C++ exceptions, but are rather registered with the VM instance.
+Exceptions are encountered nonetheless and thus subsequent control-flow logic usually needs to respond to their presence, hence all these macros to help with this.
 
 To start let's see how throw scope objects help you know when a function can throw.
 
