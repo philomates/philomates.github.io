@@ -268,3 +268,7 @@ In this second post about JSC feature development we covered how to get differen
 That concludes my experiences so far with implementation work in JSC.
 
 Hope you found it interesting and I'm looking forward to sharing more write-ups as I continue my experiences hacking on open source web compilers at Igalia.
+
+Lastly I'd like to extend some credit to some folks that helped me get this post together:
+ - Ross Kirsling whose explanations regarding exception handling on the WebKit slack have been folded into this post. And also thanks to all the other helpful folks in that community.
+ - My colleagues Caio Lima, Caitlin Potter, Mikhail Gadelha, and Andy Wingo for getting me unstuck many times over and always having a useful CLI flag up their sleeves
