@@ -8,7 +8,12 @@ In the last post I talked about the Shadow Realm proposal and how I implemented 
 
 Today I'd like to expand a bit on the development process of working on new features in JavaScriptCore, WebKit's JS engine, as well as go into testing, experiences debugging performance issues, and some JSC abstractions that tripped me up.
 
-### tests
+This post is a bit of a mix of topics; we'll cover:
+ - [test coverage](#test-coverage)
+ - [exception handling](#exception-checking-in-jsc)
+ - [OOM and GC issues](#debugging-arm-out-of-memory-woes)
+
+## test coverage
 
 When implementing new features in JSC it is helfpul to know what type of test coverage you need to get the patch landed.
 
@@ -18,7 +23,7 @@ While `test262` tests run via the JSC console will give you nice coverage of the
 
 Let's get into both of these for a bit.
 
-#### test262
+### test262
 
 `test262` is developed in its own repository and then the different browsers import changes at their own descretion. Rick Waldron has a [nice post](https://bocoup.com/blog/new-test262-import-and-runner-in-webkit) explaining how the JSC project imports and runs `test262` tests.
 
@@ -30,7 +35,7 @@ With that, and making sure I had imported the most recent shadow realm suite cha
 $ Tools/Scripts/test262-runner --debug --feature ShadowRealm --jsc WebKitBuild/Debug/bin/jsc
 ```
 
-#### stress
+### stress
 
 Turns out that getting all green on a `test262` isn't enough though, even if it comprehensively exercises the expected behavior of the new feature.
 JSC has many development flags that can turn on validation checks, trigger or disable different tiers of the JIT, and force caching.
@@ -55,9 +60,9 @@ $ Tools/Scripts/run-javascriptcore-tests --jsc-only --debug --no-build --filter=
 
 When I did this for shadow realm I discovered several issues
 
-#### bytecode cache issues
+## bytecode cache issues
 
-The first issue I came across was that my `evaluate`-related code didn't play nice with the bytecode cache.
+The first issue that arose from adding stress test coverage was that my `evaluate`-related code didn't play nice with the bytecode cache.
 It took me a while to figure out what the trick was to reproduce the issue.
 
 First you need to populate the cache with a run with:
@@ -85,7 +90,7 @@ With that setup you can interate more quickly on bytecode cache related issues w
 
 And in the case of my issue: I was using an improper code path for evaluation. Once I realized this and adapted my code to use the code path for the standard indirect eval implementation, this issue went away.
 
-#### exception checking in JSC
+## exception checking in JSC
 
 The second issue that cropped up was with handling exceptions in C++ part of my implementation. As soon as I turned on the `--validateExceptionChecks` flag I started getting many issues like this:
 
@@ -105,7 +110,7 @@ Exceptions are encountered nonetheless and thus subsequent control-flow logic us
 
 To start let's see how throw scope objects help you know when a function can throw.
 
-##### throw scopes
+### throw scopes
 
 You can loosely know if a function can throw if a throw scope is declared within it.
 
@@ -129,9 +134,9 @@ If your code throws an exception but doesn't create a throw scope beforehand, th
 Note that `auto` is used here to signify that you shouldn't pass the `scope` object around, given that it is only relevant to the current C++ scope.
 This is especially relevant because scope validation checks make use of the "resource acquisition is initialization" (RAII) pattern, and having destruction tied to a particular C++ scope is important.
 
-##### aborting after an exception
+### aborting after an exception
 
-If you write some code that calls a function that can raise a JS exception, you need to make sure you act accordingly afterwards if an exception is "thrown" (as in, registered with the VM).
+If you write some code that calls a function that can result in a JS exception, you need to make sure you act accordingly afterwards. This is done by using the aforementioned macros to check if an exception is "thrown", or that is, has been registered with the VM.
 This is most commonly done with the `RETURN_IF_EXCEPTION` macro, looking something like `fnThatMayThrow(); RETURN_IF_EXCEPTION(scope, { });`.
 This says if an exception has been registered, immediately return an empty JSValue instance (as interpreted from the `{ }` value).
 
@@ -145,7 +150,7 @@ return result;
 
 Which can then be written `RELEASE_AND_RETURN(scope, attemptSomeCalculation());`. It can be used in the place of a `return` and says that the second argument expression might throw but the next level up will react accordingly. Under the hood it is using a `scope.release()` to ignore some of the exception validation checks that happen when that particular `scope` object is destructed.
 
-##### handling an exception
+### handling an exception
 
 But what if you want to actually run some logic after an exception has been registered?
 This can be done using the pattern:
@@ -162,12 +167,12 @@ RELEASE_AND_RETURN(scope, result);
 
 Note that `UNLIKELY` is a branch-prediction hint that helps the compiler preduce more optimized code.
 
-##### catch scopes
+### catch scopes
 
 At some point the engine needs to actually take the JS exception registered in the VM and properly throw it.
 This is done via a catch scope (`DECLARE_CATCH_SCOPE`) which allows getting and clearing the current exception. With this the engine can properly dump the exception.
 
-### debugging (ARM) out-of-memory woes
+## debugging (ARM) out-of-memory woes
 
 With stress tests running and my scope issues resolved I submitted my patch to the JSC review system, which triggered an EWS run (Early Warning System, WebKit's continuous integration). I had my share of random build issues to resolve, some not even due to my changes, but rather issues with the main branch (not sure how it gets in an unbuild-able state, but I guess it does). After that I ran into an OOM error while the CI ran the suite on some ARM machines.
 
@@ -175,7 +180,7 @@ Igalia maintains the 32-bit ARM version of WebKit and so we are the ones checkin
 
 Of course when there is an out-of-memory error in a C++ code-base the first thought is: memory leak
 
-#### generating a heap dump
+### generating a heap dump
 
 I started by trying to generate some sort of heap dump to see if it was infact a memory leak. You can do this by adapting your problematic JS test with
 
@@ -195,22 +200,7 @@ From there, open `Tools/GCHeapInspector/gc-heap-inspector.html` in your browser 
 
 I didn't see anything too fishy there with my issue, so I moved on.
 
-#### checking inlining
-
-While not entirely related to an OOM issue, the implementation also seemed pretty slow, so I wanted to verify that code inlining was happening correctly.
-
-To do this you can dump the disassembled version of your script:
-
-```
-$ Tools/Scripts/run-jsc --jsc-only --debug --useShadowRealm=True ~/igalia/WebKit/JSTests/stress/oom_issue.js --dumpDisassembly=true 2>&1 | less
-```
-
-and then validate the inlining by (TODO fill this in)
-
-In this case, everything was fine with the inlining of parts of my implementation.
-
-
-#### evaluating performance by working backwards
+### evaluating performance by working backwards
 
 Not really knowing what to do next to track down the OOM issue, I decided to work backwards and slowly disable features of `ShadowRealm.prototype.evaluate` until it started looking like a plain `eval`:
  - turned off callable boundary wrapping, which was easy because it was implemented in JS and required me to change things like `return @wrap(result)` to `return result`.
@@ -236,7 +226,7 @@ for (var i = 0; i < 2000; ++i)
   (0, eval)("() => {}");
 ```
 
-#### GC issues
+### GC issues
 
 I decided to try to get more granularity on when things were allocated and de-allocated.
 A colleague shared that `--logExecutableAllocation=1` would log allocation information, which showed more and more objects being allocated without old objects being freed.
