@@ -49,7 +49,7 @@ In this case I added a few files to `JSTest/stress`, which is more or less an un
 You can test for validity of your tests via a quick vanilla evaluation:
 
 ```
-$ Tools/Scripts/run-jsc --jsc-only --debug --useShadowRealm=True ~/igalia/WebKit/JSTests/stress/shadow-realm-evaluate.js
+$ Tools/Scripts/run-jsc --jsc-only --debug --useShadowRealm=True JSTests/stress/shadow-realm-evaluate.js
 ```
 
 and then to use the (really slow) harness that fully explores all the flags for turning on validations and specific compiler tiers:
@@ -62,10 +62,10 @@ When I did this for shadow realm I discovered several issues
 
 ## bytecode cache issues
 
-The first issue that arose from adding stress test coverage was that my `evaluate`-related code didn't play nice with the bytecode cache.
+The first issue that surfaced from adding stress test coverage was that my `evaluate`-related code didn't play nice with the bytecode cache.
 It took me a while to figure out what the trick was to reproduce the issue.
 
-First you need to populate the cache with a run with:
+First you need to create a cache location and populate it:
 
 ```
 $ mktemp -d -t bytecode-cacheXXXXXX
@@ -73,16 +73,16 @@ $ mktemp -d -t bytecode-cacheXXXXXX
 
 $ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true \
                         --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 \
-                        --useFTLJIT=true --useShadowRealm=1 ~/igalia/WebKit/JSTests/stress/shadow-realm-evaluate.js \
+                        --useFTLJIT=true --useShadowRealm=1 JSTests/stress/shadow-realm-evaluate.js \
                         --diskCachePath=/tmp/bytecode-cacheJzazAI
 ```
 
-Then you need to force usage of the cache with a run with:
+Then you force usage of the cache by adding the `--forceDiskCache` flag:
 
 ```
 $ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true \
                         --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 \
-                        --useFTLJIT=true --useShadowRealm=1 ~/igalia/WebKit/JSTests/stress/shadow-realm-evaluate.js \
+                        --useFTLJIT=true --useShadowRealm=1 JSTests/stress/shadow-realm-evaluate.js \
                         --diskCachePath=/tmp/bytecode-cacheJzazAI --forceDiskCache=1
 ```
 
@@ -96,23 +96,23 @@ The second issue that cropped up was with handling exceptions in C++ part of my 
 
 ```
 ERROR: Unchecked JS exception:
-    This scope can throw a JS exception: operator() @ /home/mates/igalia/WebKit/Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:83
+    This scope can throw a JS exception: operator() @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:83
         (ExceptionScope::m_recursionDepth was 6)
-    But the exception was unchecked as of this scope: createImpl @ /home/mates/igalia/WebKit/Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:42
+    But the exception was unchecked as of this scope: createImpl @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:42
         (ExceptionScope::m_recursionDepth was 5)
 ```
 
 As far as I understand, this validation failure is result of not properly doing a certain exception book-keeping dance.
-This dance replaces the more common `try`-`catch` manner of exception handling with a few macros (such as `DECLARE_THROW_SCOPE`, `RETURN_IF_EXCEPTION`, `RELEASE_AND_RETURN`). These macros help ensure you explicitly consider any JS exceptions that can arise from calling into a function that can throw.
+Instead of the `try`-`catch` manner of exception handling, JSC relies on a few custom macros (such as `DECLARE_THROW_SCOPE`, `RETURN_IF_EXCEPTION`, `RELEASE_AND_RETURN`). These macros help ensure you explicitly consider any JS exceptions that can arise from calling into a function that can throw.
 
 This is consideration is needed because JS exceptions inside the JSC engine don't explicitly interrupt the C++ control flow, like normal C++ exceptions, but are rather registered with the VM instance.
-Exceptions are encountered nonetheless and thus subsequent control-flow logic usually needs to respond to their presence, hence all these macros to help with this.
+Exceptions are encountered nonetheless and thus subsequent logic usually needs to respond to their presence, hence all these macros to help with this.
 
 To start let's see how throw scope objects help you know when a function can throw.
 
 ### throw scopes
 
-You can loosely know if a function can throw if a throw scope is declared within it.
+You can loosely know if a C++ function can throw a JS exception if a throw scope is declared within it.
 
 From the `ThrowScope` class:
 
@@ -137,8 +137,14 @@ This is especially relevant because scope validation checks make use of the "res
 ### aborting after an exception
 
 If you write some code that calls a function that can result in a JS exception, you need to make sure you act accordingly afterwards. This is done by using the aforementioned macros to check if an exception is "thrown", or that is, has been registered with the VM.
-This is most commonly done with the `RETURN_IF_EXCEPTION` macro, looking something like `fnThatMayThrow(); RETURN_IF_EXCEPTION(scope, { });`.
-This says if an exception has been registered, immediately return an empty JSValue instance (as interpreted from the `{ }` value).
+This is most commonly done with the `RETURN_IF_EXCEPTION` macro, looking something like
+
+```c++
+fnThatMayThrow();
+RETURN_IF_EXCEPTION(scope, { });
+```
+
+This says if an exception has been registered, immediately return an empty JSValue instance (as interpreted from the `{ }` value in this context).
 
 `RELEASE_AND_RETURN` is another related macro you might see sometimes. It is shorthand for
 
@@ -159,7 +165,7 @@ This can be done using the pattern:
 auto result = attemptSomeCalculation();
 if (UNLIKELY(scope.exception())) {
     scope.clearException();
-    // re-throw the exception with an adapted message
+    // custom handling logic: in this case re-throw the exception with an adapted message
     return throwVMError(globalObject, scope, createTypeError(globalObject, "Error encountered during evaluation"_s));
 }
 RELEASE_AND_RETURN(scope, result);
@@ -169,8 +175,8 @@ Note that `UNLIKELY` is a branch-prediction hint that helps the compiler preduce
 
 ### catch scopes
 
-At some point the engine needs to actually take the JS exception registered in the VM and properly throw it.
-This is done via a catch scope (`DECLARE_CATCH_SCOPE`) which allows getting and clearing the current exception. With this the engine can properly dump the exception.
+Utilized less frequently are catch scopes (`DECLARE_CATCH_SCOPE`), which signal a scope where exceptions are accessed and cleared, yet new ones cannot be registered.
+With this the engine can for instance take registered JS exceptions and output them to the user.
 
 ## debugging (ARM) out-of-memory woes
 
@@ -193,12 +199,13 @@ print(generateHeapSnapshotForGCDebugging().toString());
 and then spitting that to a file:
 
 ```
-$ Tools/Scripts/run-jsc --jsc-only --debug --useShadowRealm=True ~/igalia/WebKit/JSTests/stress/oom_issue.js > heap_dump.json
+$ Tools/Scripts/run-jsc --jsc-only --debug --useShadowRealm=True JSTests/stress/oom_issue.js > heap_dump.json
 ```
 
 From there, open `Tools/GCHeapInspector/gc-heap-inspector.html` in your browser and drag in the `heap_dump.json` file to get an overview of the JS objects in the heap.
 
-I didn't see anything too fishy there with my issue, so I moved on.
+With this tool I started tweaking the number of iterations over allocate-related code and checking the resulting heap dump.
+I didn't see any correpsondence between number of objects allocated and number of iterations, so I decided to move on to other techniques.
 
 ### evaluating performance by working backwards
 
@@ -211,7 +218,7 @@ With all of these changes my implementation was effectively a glorified version 
 
 After a pointer from a colleague, I started looking into the implementation difference between direct and indirect eval.
 
-Direct eval being an eval that uses the scope of the caller, while indirect eval uses the top-level scope (for examples [see here](https://blog.klipse.tech/javascript/2016/06/20/js-eval-secrets.html)). Direct eval's implementation in JSC has a caching optimization that maps the call context to the fully parsed `eval` argument.
+Direct eval being an eval that uses the scope of the caller, while indirect eval uses the top-level scope (for examples [see here](https://blog.klipse.tech/javascript/2016/06/20/js-eval-secrets.html)). Direct eval's implementation in JSC has a caching optimization that maps the call context to the fully parsed code related corresponding to the `eval` argument.
 Indirect eval on the other hand doesn't have this optimization. I'm not exactly sure why that is, but it perhaps has to do with cache invalidation trickiness.
 I asked some JSC implementors about this and they also said that running the same code over and over via `eval` is something to be discouraged, so having poor performance is acceptible in a sense.
 
@@ -224,6 +231,13 @@ A quick run of the following on one of our ARM machines validated my assumption:
 ```javascript
 for (var i = 0; i < 2000; ++i)
   (0, eval)("() => {}");
+
+```
+
+Also resulted with the problematic
+
+```
+Ran out of executable memory while allocating 1152 bytes.
 ```
 
 ### GC issues
@@ -249,7 +263,8 @@ What does that mean? Well, probably that the heuristics for when to trigger the 
 
 ## wrap-up
 
-So this time around talking about feature implementation in JSC we saw how to get different types of test coverage, some trickiness with exceptions and scopes, as well as some approaches to exploring performance and memory issues.
+In this second post about JSC feature development we covered how to get different types of test coverage, some trickiness with exceptions and scopes, as well as some approaches to exploring performance and memory issues.
 
 That concludes my experiences so far with implementation work in JSC.
-Hope you found it interesting and I'm looking forward to sharing more about my experiences hacking open source web compilers as a part of a worker-owned collective.
+
+Hope you found it interesting and I'm looking forward to sharing more write-ups as I continue my experiences hacking on open source web compilers at Igalia.
