@@ -252,7 +252,7 @@ for (var i = 0; i < 2000; ++i) {
 
 and this time there was no crash!
 
-What does that mean? I asked around a bit and my colleague Andy Wingo suggested that the heuristics for when to trigger the GC somehow don't get some allocation information related to the indirect eval implementation, similar to https://github.com/tc39/proposal-weakrefs/issues/87. With that in mind I eventually did a deeper dive on it and discovered that an additional cache was preventing GC on executable objects https://bugs.webkit.org/show_bug.cgi?id=233206.
+What does that mean? I asked around a bit and my colleague Andy Wingo suggested that the heuristics for when to trigger the GC somehow don't get some allocation information related to the indirect eval implementation, similar to [this issue](https://github.com/tc39/proposal-weakrefs/issues/87). With that in mind I eventually did a deeper dive on it and discovered that an additional cache was preventing GC on executable objects and submitted [this issue](https://bugs.webkit.org/show_bug.cgi?id=233206).
 
 ## wrap-up
 
