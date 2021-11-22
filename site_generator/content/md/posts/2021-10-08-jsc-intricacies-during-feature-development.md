@@ -88,7 +88,7 @@ And in the case of my issue: I was using an improper code path for evaluation. O
 
 The second issue that cropped up was with handling exceptions in C++ part of my implementation. As soon as I turned on the `--validateExceptionChecks` flag I started getting many issues like this:
 
-```
+```bash
 ERROR: Unchecked JS exception:
 This scope can throw a JS exception: operator() @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:83
     (ExceptionScope::m_recursionDepth was 6)
@@ -229,7 +229,7 @@ for (var i = 0; i < 2000; ++i)
 
 Also resulted with the problematic
 
-```
+```bash
 Ran out of executable memory while allocating 1152 bytes.
 ```
 
