@@ -6,10 +6,10 @@
 
 
 <div class="image imageright">
-<img title="Phillip Mates" alt="Phillip Mates" src="/img/phillip.jpg" width="250px">
+<img title="Phillip Mates" alt="Phillip Mates" src="img/phillip.jpg" width="250px">
 </div>
 
-<p><a href="/files/mates_cv.pdf">CV</a> | <a href="https://github.com/philomates">GitHub</a> | <a href="https://twitter.com/philomates">Twitter</a>
+<p><a href="./files/mates_cv.pdf">CV</a> | <a href="https://github.com/philomates">GitHub</a> | <a href="https://twitter.com/philomates">Twitter</a>
 
 <p>I'm <strong>Phillip Mates</strong>, a software engineer on the Compilers team at <a href="https://igalia.com/">Igalia</a></p>
 
