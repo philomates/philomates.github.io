@@ -71,19 +71,13 @@ First you need to create a cache location and populate it:
 $ mktemp -d -t bytecode-cacheXXXXXX
 /tmp/bytecode-cacheJzazAI
 
-$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true \
-                        --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 \
-                        --useFTLJIT=true --useShadowRealm=1 JSTests/stress/shadow-realm-evaluate.js \
-                        --diskCachePath=/tmp/bytecode-cacheJzazAI
+$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 --useFTLJIT=true --useShadowRealm=1 JSTests/stress/shadow-realm-evaluate.js --diskCachePath=/tmp/bytecode-cacheJzazAI
 ```
 
 Then you force usage of the cache by adding the `--forceDiskCache` flag:
 
 ```
-$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true \
-                        --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 \
-                        --useFTLJIT=true --useShadowRealm=1 JSTests/stress/shadow-realm-evaluate.js \
-                        --diskCachePath=/tmp/bytecode-cacheJzazAI --forceDiskCache=1
+$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 --useFTLJIT=true --useShadowRealm=1 JSTests/stress/shadow-realm-evaluate.js --diskCachePath=/tmp/bytecode-cacheJzazAI --forceDiskCache=1
 ```
 
 With that setup you can interate more quickly on bytecode cache related issues without relying on the slowness of the whole harness.
@@ -96,10 +90,10 @@ The second issue that cropped up was with handling exceptions in C++ part of my 
 
 ```
 ERROR: Unchecked JS exception:
-    This scope can throw a JS exception: operator() @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:83
-        (ExceptionScope::m_recursionDepth was 6)
-    But the exception was unchecked as of this scope: createImpl @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:42
-        (ExceptionScope::m_recursionDepth was 5)
+This scope can throw a JS exception: operator() @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:83
+    (ExceptionScope::m_recursionDepth was 6)
+But the exception was unchecked as of this scope: createImpl @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:42
+    (ExceptionScope::m_recursionDepth was 5)
 ```
 
 As far as I understand, this validation failure is result of not properly doing a certain exception book-keeping dance.
@@ -231,7 +225,6 @@ A quick run of the following on one of our ARM machines validated my assumption:
 ```javascript
 for (var i = 0; i < 2000; ++i)
   (0, eval)("() => {}");
-
 ```
 
 Also resulted with the problematic

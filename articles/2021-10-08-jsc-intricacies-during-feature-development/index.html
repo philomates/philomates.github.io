@@ -51,19 +51,13 @@ In order to have your implementation accepted by reviewers you should add test c
 It took me a while to figure out what the trick was to reproduce the issue.</p><p>First you need to create a cache location and populate it:</p><pre><code>$ mktemp -d -t bytecode-cacheXXXXXX
 /tmp/bytecode-cacheJzazAI
 
-$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true \
-                        --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 \
-                        --useFTLJIT=true --useShadowRealm=1 JSTests/stress/shadow-realm-evaluate.js \
-                        --diskCachePath=/tmp/bytecode-cacheJzazAI
-</code></pre><p>Then you force usage of the cache by adding the <code>--forceDiskCache</code> flag:</p><pre><code>$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true \
-                        --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 \
-                        --useFTLJIT=true --useShadowRealm=1 JSTests/stress/shadow-realm-evaluate.js \
-                        --diskCachePath=/tmp/bytecode-cacheJzazAI --forceDiskCache=1
+$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 --useFTLJIT=true --useShadowRealm=1 JSTests/stress/shadow-realm-evaluate.js --diskCachePath=/tmp/bytecode-cacheJzazAI
+</code></pre><p>Then you force usage of the cache by adding the <code>--forceDiskCache</code> flag:</p><pre><code>$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 --useFTLJIT=true --useShadowRealm=1 JSTests/stress/shadow-realm-evaluate.js --diskCachePath=/tmp/bytecode-cacheJzazAI --forceDiskCache=1
 </code></pre><p>With that setup you can interate more quickly on bytecode cache related issues without relying on the slowness of the whole harness.</p><p>And in the case of my issue: I was using an improper code path for evaluation. Once I realized this and adapted my code to use the code path for the standard indirect eval implementation, this issue went away.</p><h2 id="exception-checking-in-jsc">exception checking in JSC</h2><p>The second issue that cropped up was with handling exceptions in C++ part of my implementation. As soon as I turned on the <code>--validateExceptionChecks</code> flag I started getting many issues like this:</p><pre><code>ERROR: Unchecked JS exception:
-    This scope can throw a JS exception: operator() @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:83
-        (ExceptionScope::m_recursionDepth was 6)
-    But the exception was unchecked as of this scope: createImpl @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:42
-        (ExceptionScope::m_recursionDepth was 5)
+This scope can throw a JS exception: operator() @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:83
+    (ExceptionScope::m_recursionDepth was 6)
+But the exception was unchecked as of this scope: createImpl @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:42
+    (ExceptionScope::m_recursionDepth was 5)
 </code></pre><p>As far as I understand, this validation failure is result of not properly doing a certain exception book-keeping dance.
 Instead of the <code>try</code>-<code>catch</code> manner of exception handling, JSC relies on a few custom macros (such as <code>DECLARE_THROW_SCOPE</code>, <code>RETURN_IF_EXCEPTION</code>, <code>RELEASE_AND_RETURN</code>). These macros help ensure you explicitly consider any JS exceptions that can arise from calling into a function that can throw.</p><p>This is consideration is needed because JS exceptions inside the JSC engine don't explicitly interrupt the C++ control flow, like normal C++ exceptions, but are rather registered with the VM instance.
 Exceptions are encountered nonetheless and thus subsequent logic usually needs to respond to their presence, hence all these macros to help with this.</p><p>To start let's see how throw scope objects help you know when a function can throw.</p><h3 id="throw-scopes">throw scopes</h3><p>You can loosely know if a C++ function can throw a JS exception if a throw scope is declared within it.</p><p>From the <code>ThrowScope</code> class:</p><pre><code>// If a function can throw a JS exception, it should declare a ThrowScope at the
@@ -96,7 +90,6 @@ I didn't see any correpsondence between number of objects allocated and number o
 Indirect eval on the other hand doesn't have this optimization. I'm not exactly sure why that is, but it perhaps has to do with cache invalidation trickiness.
 I asked some JSC implementors about this and they also said that running the same code over and over via <code>eval</code> is something to be discouraged, so having poor performance is acceptible in a sense.</p><p>The Shadow Realm <code>evaluate</code> spec says that it should use an indirect eval, which makes sense given that the caller is in an entirely different realm / has a different global object. Given this, I started digging into my implementation and verified that the JSC code I used is in fact the same as the indirect eval implementation. Hence there is no caching of parsed results. I then compared execution times of <code>ShadowRealm.prototype.evaluate</code> against direct and indirect eval and found it to be in-line with the slowness of indirect eval.</p><p>At this point I thought, if <code>ShadowRealm.prototype.evaluate</code> is slow like indirect eval, then maybe indirect eval also has this OOM issue.</p><p>A quick run of the following on one of our ARM machines validated my assumption: the issue also affects indirect eval.</p><pre><code class="javascript">for (var i = 0; i &lt; 2000; ++i)
   (0, eval)("() =&gt; {}");
-
 </code></pre><p>Also resulted with the problematic</p><pre><code>Ran out of executable memory while allocating 1152 bytes.
 </code></pre><h3 id="gc-issues">GC issues</h3><p>I decided to try to get more granularity on when things were allocated and de-allocated.
 A colleague shared that <code>--logExecutableAllocation=1</code> would log allocation information, which showed more and more objects being allocated without old objects being freed.
