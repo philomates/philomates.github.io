@@ -167,9 +167,9 @@ These can be redefined at runtime, which is dangerous. I thus later updated them
 
 At various points during the development of `builtins/ShadowRealmPrototype.js` I my changes weren't included in re-builds I triggered.
 
-It is pretty hard to iterate on subtle issues when you aren't sure if your code changes were in fact loaded. Given that traditional step debugging doesn't work on JS built-ins and I couldn't find a way to print log lines either, I really started feeling lost.
+It is pretty hard to iterate on subtle issues when you aren't sure if your code changes were in fact loaded. Traditional step debugging won't help you out here, but since wrapping up this work I've discovered that you can do print-statement debugging in JSC via `@$vm.print` expressions, given you use the `--useDollarVM=1` flag.
 
-The "fix" I found was to turn off `ccache` by passing the `--no-use-ccache` to the `build-webkit` script. This made building much slower, but seemed to help. If you know what's going on here, I'd love some tips!
+Regardless, the "fix" I found to ensure JS built-in changes were registered was to turn off `ccache` by passing the `--no-use-ccache` to the `build-webkit` script. This made building much slower, but seemed to help. If you know what's going on here, I'd love some tips!
 
 ## Wrap-up
 

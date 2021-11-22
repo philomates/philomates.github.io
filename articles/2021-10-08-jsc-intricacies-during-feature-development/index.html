@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Phillip Mates: JavaScriptCore Intricacies During Feature Development</title>
+    
+
+<meta name="description" content="How to get test coverage and debug a new JS feature in JavaScriptCore">
+<meta property="og:description" content="How to get test coverage and debug a new JS feature in JavaScriptCore">
+
+<meta property="og:url" content="https://philomates.github.io/articles/2021-10-08-jsc-intricacies-during-feature-development/" />
+<meta property="og:title" content="JavaScriptCore Intricacies During Feature Development" />
+<meta property="og:type" content="article" />
+
+    <link rel="canonical" href="https://philomates.github.io/articles/2021-10-08-jsc-intricacies-during-feature-development/">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="//fonts.googleapis.com/css?family=Alegreya:400italic,700italic,400,700" rel="stylesheet"
+          type="text/css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.7.0/styles/default.min.css">
+    <link href="/css/screen.css" rel="stylesheet" type="text/css" />
+    <link rel="shortcut icon" href="favicon.ico">
+</head>
+<body>
+    <header id="header"><div class="wrapper">
+      <h1 id="title"><a href="/">Phillip Mates</a></h1>
+
+      <ul id="navigation">
+        <li><a href="/archives">Blog</a></li>
+        <li><a href="/projects">Projects</a></li>
+        <li><a href="/publications">Pubs</a></li>
+      </ul>
+    </div></header>
+
+    
+    <section id="main" class="wrapper">
+<article>
+  <h1>JavaScriptCore Intricacies During Feature Development</h1>
+
+  <p class="date">October 8, 2021</p>
+
+
+    <p>In the last post I talked about the Shadow Realm proposal and how I implemented it in JSC.</p><p>Today I'd like to expand a bit on the development process of working on new features in JavaScriptCore, WebKit's JS engine, as well as go into testing, experiences debugging performance issues, and some JSC abstractions that tripped me up.</p><p>This post is a bit of a mix of topics; we'll cover:</p><ul><li><a href="#test-coverage">test coverage</a></li><li><a href="#exception-checking-in-jsc">exception handling</a></li><li><a href="#debugging-arm-out-of-memory-woes">OOM and GC issues</a></li></ul><h2 id="test-coverage">test coverage</h2><p>When implementing new features in JSC it is helfpul to know what type of test coverage you need to get the patch landed.</p><p>With the shadow realms implementation, I was initially relying on <a href="https://github.com/tc39/test262/tree/main/test/built-ins/ShadowRealm"><code>test262</code> coverage</a> that <a href="https://twitter.com/leobalter/">Leo Balter</a> and <a href="https://twitter.com/rwaldron">Rick Waldron</a> developed. <a href="https://github.com/tc39/test262/"><code>test262</code></a> is the implementation conformance test suite for TC39 features, which is a part of the TC39 proposal process and ultimately incorporated into the various browsers' test suites.</p><p>While <code>test262</code> tests run via the JSC console will give you nice coverage of the feature, you still need to use other tools to exercise the various levels of the JS engine, which in JSC is generally done with tests in the <code>JSTest/stress/</code> directory.</p><p>Let's get into both of these for a bit.</p><h3 id="test262">test262</h3><p><code>test262</code> is developed in its own repository and then the different browsers import changes at their own descretion. Rick Waldron has a <a href="https://bocoup.com/blog/new-test262-import-and-runner-in-webkit">nice post</a> explaining how the JSC project imports and runs <code>test262</code> tests.</p><p>Since I put <code>ShadowRealm</code> behind a feature flag <a href="https://github.com/WebKit/WebKit/compare/main...philomates:shadow-realm-patch-iii?expand=1#diff-6c397225d0cc748e7f8a234d864cd4a4acd3df1ecffbc49e54973e91fe5cad11R1265-R1266">here</a>, I needed to tell <code>test262</code> in <code>JSTests/test262/config.yaml</code> to use the <code>--useShadowRealm</code> flag when executing relevant tests <a href="https://github.com/WebKit/WebKit/compare/main...philomates:shadow-realm-patch-iii?expand=1#diff-1a369f183a44ae6e8e9850fd25b85798b9e74ddc9f91b8cdb1435513050c3fc5R12">here</a>.</p><p>With that, and making sure I had imported the most recent shadow realm suite changes from the <code>test262</code> repository, I was able to run the suite over my build of jsc relatively quickly with:</p><pre><code>$ Tools/Scripts/test262-runner --debug --feature ShadowRealm --jsc WebKitBuild/Debug/bin/jsc
+</code></pre><h3 id="stress">stress</h3><p>Turns out that getting all green on a <code>test262</code> isn't enough though, even if it comprehensively exercises the expected behavior of the new feature.
+JSC has many development flags that can turn on validation checks, trigger or disable different tiers of the JIT, and force caching.
+The <code>run-javascriptcore-tests</code> script is a harness that comprehensively explores all these flags.
+In order to have your implementation accepted by reviewers you should add test coverage that is exercised by this script.</p><p>In this case I added a few files to <code>JSTest/stress</code>, which is more or less an unstructured directory of test files, at least as far as I can tell.</p><p><a href="https://github.com/WebKit/WebKit/compare/main...philomates:shadow-realm-patch-iii?expand=1#diff-b9d496009207df65cd754d33dd7c9ab9242e1edc0ed0c6f302d73935097a807c"><code>shadow-realm-evaluate.js</code></a> adds standard behavioral coverage for <code>ShadowRealm.prototype.evaluate</code> along with a few expressions that are repeated thousands of times (in big <code>for</code>-loops) to trigger various JIT optimizations. <a href="https://github.com/WebKit/WebKit/compare/main...philomates:shadow-realm-patch-iii?expand=1#diff-ec9bbc8fd12b94135fdd54058ac6ce7c3f122cd671e50a4908beb381c70e8466"><code>shadow-realm-import-value.js</code></a> is roughly the same for <code>ShadowRealm.prototype.importValue</code>.</p><p>You can test for validity of your tests via a quick vanilla evaluation:</p><pre><code>$ Tools/Scripts/run-jsc --jsc-only --debug --useShadowRealm=True JSTests/stress/shadow-realm-evaluate.js
+</code></pre><p>and then to use the (really slow) harness that fully explores all the flags for turning on validations and specific compiler tiers:</p><pre><code>$ Tools/Scripts/run-javascriptcore-tests --jsc-only --debug --no-build --filter="shadow-realm-*.js"
+</code></pre><p>When I did this for shadow realm I discovered several issues</p><h2 id="bytecode-cache-issues">bytecode cache issues</h2><p>The first issue that surfaced from adding stress test coverage was that my <code>evaluate</code>-related code didn't play nice with the bytecode cache.
+It took me a while to figure out what the trick was to reproduce the issue.</p><p>First you need to create a cache location and populate it:</p><pre><code>$ mktemp -d -t bytecode-cacheXXXXXX
+/tmp/bytecode-cacheJzazAI
+
+$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true \
+                        --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 \
+                        --useFTLJIT=true --useShadowRealm=1 JSTests/stress/shadow-realm-evaluate.js \
+                        --diskCachePath=/tmp/bytecode-cacheJzazAI
+</code></pre><p>Then you force usage of the cache by adding the <code>--forceDiskCache</code> flag:</p><pre><code>$ Tools/Scripts/run-jsc --jsc-only --debug --useFTLJIT=false --useFunctionDotArguments=true \
+                        --validateExceptionChecks=true --useDollarVM=true --maxPerThreadStackUsage=1572864 \
+                        --useFTLJIT=true --useShadowRealm=1 JSTests/stress/shadow-realm-evaluate.js \
+                        --diskCachePath=/tmp/bytecode-cacheJzazAI --forceDiskCache=1
+</code></pre><p>With that setup you can interate more quickly on bytecode cache related issues without relying on the slowness of the whole harness.</p><p>And in the case of my issue: I was using an improper code path for evaluation. Once I realized this and adapted my code to use the code path for the standard indirect eval implementation, this issue went away.</p><h2 id="exception-checking-in-jsc">exception checking in JSC</h2><p>The second issue that cropped up was with handling exceptions in C++ part of my implementation. As soon as I turned on the <code>--validateExceptionChecks</code> flag I started getting many issues like this:</p><pre><code>ERROR: Unchecked JS exception:
+    This scope can throw a JS exception: operator() @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:83
+        (ExceptionScope::m_recursionDepth was 6)
+    But the exception was unchecked as of this scope: createImpl @ Source/JavaScriptCore/runtime/IndirectEvalExecutable.cpp:42
+        (ExceptionScope::m_recursionDepth was 5)
+</code></pre><p>As far as I understand, this validation failure is result of not properly doing a certain exception book-keeping dance.
+Instead of the <code>try</code>-<code>catch</code> manner of exception handling, JSC relies on a few custom macros (such as <code>DECLARE_THROW_SCOPE</code>, <code>RETURN_IF_EXCEPTION</code>, <code>RELEASE_AND_RETURN</code>). These macros help ensure you explicitly consider any JS exceptions that can arise from calling into a function that can throw.</p><p>This is consideration is needed because JS exceptions inside the JSC engine don't explicitly interrupt the C++ control flow, like normal C++ exceptions, but are rather registered with the VM instance.
+Exceptions are encountered nonetheless and thus subsequent logic usually needs to respond to their presence, hence all these macros to help with this.</p><p>To start let's see how throw scope objects help you know when a function can throw.</p><h3 id="throw-scopes">throw scopes</h3><p>You can loosely know if a C++ function can throw a JS exception if a throw scope is declared within it.</p><p>From the <code>ThrowScope</code> class:</p><pre><code>// If a function can throw a JS exception, it should declare a ThrowScope at the
+// top of the function (as early as possible) using the DECLARE_THROW_SCOPE macro.
+// Declaring a ThrowScope in a function means that the function may throw an
+// exception that its caller will have to handle.
+</code></pre><p>Hence, in lots of places you'll see the following, which declares that in the current C++ scope, a JS exception can arise:</p><pre><code class="c++">auto scope = DECLARE_THROW_SCOPE(vm);
+</code></pre><p>If your code throws an exception but doesn't create a throw scope beforehand, the next piece of code that executes anything related to throw scopes will probably fail a validation check.</p><p>Note that <code>auto</code> is used here to signify that you shouldn't pass the <code>scope</code> object around, given that it is only relevant to the current C++ scope.
+This is especially relevant because scope validation checks make use of the "resource acquisition is initialization" (RAII) pattern, and having destruction tied to a particular C++ scope is important.</p><h3 id="aborting-after-an-exception">aborting after an exception</h3><p>If you write some code that calls a function that can result in a JS exception, you need to make sure you act accordingly afterwards. This is done by using the aforementioned macros to check if an exception is "thrown", or that is, has been registered with the VM.
+This is most commonly done with the <code>RETURN_IF_EXCEPTION</code> macro, looking something like</p><pre><code class="c++">fnThatMayThrow();
+RETURN_IF_EXCEPTION(scope, { });
+</code></pre><p>This says if an exception has been registered, immediately return an empty JSValue instance (as interpreted from the <code>{ }</code> value in this context).</p><p><code>RELEASE_AND_RETURN</code> is another related macro you might see sometimes. It is shorthand for</p><pre><code class="c++">auto result = attemptSomeCalculation();
+RETURN_IF_EXCEPTION(scope, result);
+return result;
+</code></pre><p>Which can then be written <code>RELEASE_AND_RETURN(scope, attemptSomeCalculation());</code>. It can be used in the place of a <code>return</code> and says that the second argument expression might throw but the next level up will react accordingly. Under the hood it is using a <code>scope.release()</code> to ignore some of the exception validation checks that happen when that particular <code>scope</code> object is destructed.</p><h3 id="handling-an-exception">handling an exception</h3><p>But what if you want to actually run some logic after an exception has been registered?
+This can be done using the pattern:</p><pre><code class="c++">auto result = attemptSomeCalculation();
+if (UNLIKELY(scope.exception())) {
+    scope.clearException();
+    // custom handling logic: in this case re-throw the exception with an adapted message
+    return throwVMError(globalObject, scope, createTypeError(globalObject, "Error encountered during evaluation"_s));
+}
+RELEASE_AND_RETURN(scope, result);
+</code></pre><p>Note that <code>UNLIKELY</code> is a branch-prediction hint that helps the compiler preduce more optimized code.</p><h3 id="catch-scopes">catch scopes</h3><p>Utilized less frequently are catch scopes (<code>DECLARE_CATCH_SCOPE</code>), which signal a scope where exceptions are accessed and cleared, yet new ones cannot be registered.
+With this the engine can for instance take registered JS exceptions and output them to the user.</p><h2 id="debugging-arm-out-of-memory-woes">debugging (ARM) out-of-memory woes</h2><p>With stress tests running and my scope issues resolved I submitted my patch to the JSC review system, which triggered an EWS run (Early Warning System, WebKit's continuous integration). I had my share of random build issues to resolve, some not even due to my changes, but rather issues with the main branch (not sure how it gets in an unbuild-able state, but I guess it does). After that I ran into an OOM error while the CI ran the suite on some ARM machines.</p><p>Igalia maintains the 32-bit ARM version of WebKit and so we are the ones checking out these failures, so I figured I'd dive in and get a little more experience with the ARM side of things.</p><p>Of course when there is an out-of-memory error in a C++ code-base the first thought is: memory leak</p><h3 id="generating-a-heap-dump">generating a heap dump</h3><p>I started by trying to generate some sort of heap dump to see if it was infact a memory leak. You can do this by adapting your problematic JS test with</p><pre><code class="javascript">... code leading to OOM issues
+
+print(generateHeapSnapshotForGCDebugging().toString());
+</code></pre><p>and then spitting that to a file:</p><pre><code>$ Tools/Scripts/run-jsc --jsc-only --debug --useShadowRealm=True JSTests/stress/oom_issue.js &gt; heap_dump.json
+</code></pre><p>From there, open <code>Tools/GCHeapInspector/gc-heap-inspector.html</code> in your browser and drag in the <code>heap_dump.json</code> file to get an overview of the JS objects in the heap.</p><p>With this tool I started tweaking the number of iterations over allocate-related code and checking the resulting heap dump.
+I didn't see any correpsondence between number of objects allocated and number of iterations, so I decided to move on to other techniques.</p><h3 id="evaluating-performance-by-working-backwards">evaluating performance by working backwards</h3><p>Not really knowing what to do next to track down the OOM issue, I decided to work backwards and slowly disable features of <code>ShadowRealm.prototype.evaluate</code> until it started looking like a plain <code>eval</code>:</p><ul><li>turned off callable boundary wrapping, which was easy because it was implemented in JS and required me to change things like <code>return @wrap(result)</code> to <code>return result</code>.</li><li>I made <code>evaluate</code> use the top-level global object instead of the realm's global object.</li><li>I disabled the removal of <code>name</code> and <code>length</code> properties from wrapped callables, which is part of making functions more opaque as they cross realm boundaries. This is implemented in JS via <code>delete wrapped['name']; delete wrapped['length'];</code> and while it didn't affect anything with how the callable was treated by the VM, the <code>delete</code> calls were actually really slow. Turns out <code>delete</code> doesn't have many optimizations for it in JSC yet; maybe something to explore in the future.</li></ul><p>With all of these changes my implementation was effectively a glorified version of the standard JS <code>eval</code>, so why was it still so slow when compared to <code>eval</code>?!</p><p>After a pointer from a colleague, I started looking into the implementation difference between direct and indirect eval.</p><p>Direct eval being an eval that uses the scope of the caller, while indirect eval uses the top-level scope (for examples <a href="https://blog.klipse.tech/javascript/2016/06/20/js-eval-secrets.html">see here</a>). Direct eval's implementation in JSC has a caching optimization that maps the call context to the fully parsed code related corresponding to the <code>eval</code> argument.
+Indirect eval on the other hand doesn't have this optimization. I'm not exactly sure why that is, but it perhaps has to do with cache invalidation trickiness.
+I asked some JSC implementors about this and they also said that running the same code over and over via <code>eval</code> is something to be discouraged, so having poor performance is acceptible in a sense.</p><p>The Shadow Realm <code>evaluate</code> spec says that it should use an indirect eval, which makes sense given that the caller is in an entirely different realm / has a different global object. Given this, I started digging into my implementation and verified that the JSC code I used is in fact the same as the indirect eval implementation. Hence there is no caching of parsed results. I then compared execution times of <code>ShadowRealm.prototype.evaluate</code> against direct and indirect eval and found it to be in-line with the slowness of indirect eval.</p><p>At this point I thought, if <code>ShadowRealm.prototype.evaluate</code> is slow like indirect eval, then maybe indirect eval also has this OOM issue.</p><p>A quick run of the following on one of our ARM machines validated my assumption: the issue also affects indirect eval.</p><pre><code class="javascript">for (var i = 0; i &lt; 2000; ++i)
+  (0, eval)("() =&gt; {}");
+
+</code></pre><p>Also resulted with the problematic</p><pre><code>Ran out of executable memory while allocating 1152 bytes.
+</code></pre><h3 id="gc-issues">GC issues</h3><p>I decided to try to get more granularity on when things were allocated and de-allocated.
+A colleague shared that <code>--logExecutableAllocation=1</code> would log allocation information, which showed more and more objects being allocated without old objects being freed.
+But why weren't they being freed?!
+What would happen if I explicitly tried to free them?
+Luckily JSC exposes hooks to allow you to trigger the garbage collector via <code>fullGC</code> which the jsc console exposes for debugging purposes.</p><p>I ran</p><pre><code class="javascript">for (var i = 0; i &lt; 2000; ++i) {
+  (0, eval)("() =&gt; {}");
+  fullGC();
+}
+</code></pre><p>and this time there was no crash!</p><p>What does that mean? I asked around a bit and my colleague Andy Wingo suggested that the heuristics for when to trigger the GC somehow don't get some allocation information related to the indirect eval implementation, similar to https://github.com/tc39/proposal-weakrefs/issues/87. With that in mind I eventually did a deeper dive on it and discovered that an additional cache was preventing GC on executable objects https://bugs.webkit.org/show_bug.cgi?id=233206.</p><h2 id="wrap-up">wrap-up</h2><p>In this second post about JSC feature development we covered how to get different types of test coverage, some trickiness with exceptions and scopes, as well as some approaches to exploring performance and memory issues.</p><p>That concludes my experiences so far with implementation work in JSC.</p><p>Hope you found it interesting and I'm looking forward to sharing more write-ups as I continue my experiences hacking on open source web compilers at Igalia.</p><p>Lastly I'd like to extend some credit to some folks that helped me get this post together:</p><ul><li>Ross Kirsling whose explanations regarding exception handling on the WebKit slack have been folded into this post. And also thanks to all the other helpful folks in that community.</li><li>My colleagues Caio Lima, Caitlin Potter, Mikhail Gadelha, and Andy Wingo for getting me unstuck many times over and always having a useful CLI flag up their sleeves</li></ul>
+</article>
+</section>
+
+<footer id="footer" class="wrapper">
+</footer>
+
+
+
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="/js/highlight.pack.js" type="application/javascript"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
