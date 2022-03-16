@@ -1,0 +1,10 @@
+{:deps {:aliases [:dev :demo]}
+ :dev-http {8002 "public"
+            8001 "public/test"}
+ :nrepl {:port 9000}
+ :builds {:demo {:compiler-options {:output-feature-set :es8}
+                 :target :browser
+                 :output-dir "public/js"
+                 :optimizations :advanced
+                 :asset-path "js"
+                 :modules {:clojure-mode {:entries [nextjournal.clojure-mode.demo]}}}}}
