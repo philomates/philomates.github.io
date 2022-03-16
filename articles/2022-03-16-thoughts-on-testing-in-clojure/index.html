@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Phillip Mates: Thoughts on testing in Clojure</title>
+    
+
+<meta property="og:url" content="https://philomates.github.io/articles/2022-03-16-thoughts-on-testing-in-clojure/" />
+<meta property="og:title" content="Thoughts on testing in Clojure" />
+<meta property="og:type" content="article" />
+
+    <link rel="canonical" href="https://philomates.github.io/articles/2022-03-16-thoughts-on-testing-in-clojure/">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="//fonts.googleapis.com/css?family=Alegreya:400italic,700italic,400,700" rel="stylesheet"
+          type="text/css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.7.0/styles/default.min.css">
+    <link href="/css/screen.css" rel="stylesheet" type="text/css" />
+    <link rel="shortcut icon" href="favicon.ico">
+</head>
+<body>
+    <header id="header"><div class="wrapper">
+      <h1 id="title"><a href="/">Phillip Mates</a></h1>
+
+      <ul id="navigation">
+        <li><a href="/archives">Blog</a></li>
+        <li><a href="/publications">Pubs</a></li>
+      </ul>
+    </div></header>
+
+    
+    <section id="main" class="wrapper">
+<article>
+  <h1>Thoughts on testing in Clojure</h1>
+
+  <p class="date">March 16, 2022</p>
+
+
+    <div id="editor"></div><script src="../../js/clojure-mode.js" type="application/javascript"></script><script>nextjournal.clojure_mode.demo.render("editor", `(require '[clojure.test :as t])
+
+(defonce test-report-methods (methods t/report))
+
+(def ^:dynamic *test-results* nil)
+
+(defn- register-test-result! [m]
+  (when *test-results*
+    (when-let [test-var (last t/*testing-vars*)]
+      (dosync
+        (commute *test-results*
+                 update
+                 test-var
+                 (fnil conj [])
+                 (assoc m :context-str t/*testing-contexts*))))))
+
+(defmethod t/report :pass [m]
+  (register-test-result! m)
+  ((get test-report-methods :pass) m))
+
+(defmethod t/report :fail [m]
+  (register-test-result! m)
+  ((get test-report-methods :fail) m))
+
+(defmethod t/report :error [m]
+  (register-test-result! m)
+  ((get test-report-methods :error) m))
+
+(defn tests->data [ns]
+  (binding [*test-results* (ref {})
+            t/*test-out* (new java.io.StringWriter)]
+    (t/test-ns ns)
+    @*test-results*))
+
+(defn data->report [report-data]
+  (run! (fn [[test-var results]]
+          (run! #(binding [t/*testing-contexts* (:context-str %)
+                           t/*testing-vars* [test-var]]
+                   ((get test-report-methods (:type %)) %))
+                results))
+        report-data))
+
+(-> *ns*
+    ;; run get test results as data w/o printing
+    tests->data
+    ;; print standard clojure.test results
+    data->report)
+
+(comment
+  ;; the above is equivalent to:
+  (t/test-ns *ns*))`);
+</script>
+</article>
+</section>
+
+<footer id="footer" class="wrapper">
+</footer>
+
+
+
+<script src="/js/highlight.pack.js" type="application/javascript"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
