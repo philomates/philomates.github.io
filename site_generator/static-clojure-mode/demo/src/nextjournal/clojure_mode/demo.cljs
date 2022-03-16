@@ -23,8 +23,7 @@
                      (j/assoc! el :editorView (new EditorView
                                                    (j/obj :state
                                                           (.create EditorState #js {:doc source :extensions extensions})
-                                                          :parent el))))))
-          :style {:max-height 410}}]])
+                                                          :parent el))))))}]])
 
 (defn ^:export render [tag source]
   (rdom/render (editor source) (js/document.getElementById tag)))
