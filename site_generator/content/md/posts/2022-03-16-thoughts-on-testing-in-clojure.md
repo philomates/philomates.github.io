@@ -6,14 +6,15 @@
 <script src="../../js/clojure-mode.js" type="application/javascript"></script>
 
 
-## back to Clojure
+## back to the land of parens
 
-Last time around I wrote up my experiences hacking JavaScript VMs in C++. It was a fun and wild time; and to state the obvious: modern VMs, as well as C++, are damn complex beasts!
+Last time around I wrote up my experiences hacking JavaScript VMs in C++. It was a fun and wild time; modern VMs and C++ are, well, damn complex beasts!
 
-Since then though I've moved back to the Clojure world, joining the [Nextjournal](https://nextjournal.com/) team where we're building tools for thought. Things like a reproducible notebook platform ([Nextjournal](https://nextjournal.com/) itself) and local-first Clojure notebook tool ([Clerk](https://github.com/nextjournal/clerk)).
+Since then I've moved back to the Clojure world, where I've joined the [Nextjournal](https://nextjournal.com/) team.
+We generally work on tools for thought, but also run some consultancy projects. For instance, the _Nextjournal_ reproducible notebook platform, as well as a local-first Clojure notebook tool called [Clerk](https://github.com/nextjournal/clerk).
 
 So today I wanted to talk a bit about some fun I had with Clojure recently.
-It has to do with test tooling, and I'll start with some background experiences and then share some code that I think demonstrates some compelling aspects of Clojure.
+It has to do with test tooling; I'll start with some background experiences and then share a bit of code.
 
 ## background experience with test tools in Clojure
 
@@ -22,15 +23,16 @@ Back when I worked at Nubank, I spent a good amount of time trying to improve th
 When I joined, Nubank used [_Midje_](https://github.com/marick/Midje/) widely, which is a testing DSL inspired by Ruby's [RSpec](https://rspec.info/).
 Coming from Java, I found _Midje_ wonderfully expressive and capable but after some time realized that the DSL deviates from a few standards found in the Clojure ecosystem:
 
- * loading a namespace is effectful, as in, it would execute the tests. This got in the way of some REPL-driven workflows, as well as analysis tooling.
+ * loading a namespace mixes code evaluation and test execution effects. This can get in the way of REPL-driven workflows and analysis tools.
  * assertions are described in a non-S-expression infix style `(fact (inc 1) => 2 (dec 1) => 0)`. This made it hard to use structural editing tools.
  * the library takes a strong "all or nothing" approach, where most Clojure libraries are small and composable.
 
-I hacked on _Midje_ a bit trying to fix some things but eventually came to the opinion that if we wanted to evolve and improve our testing setup at Nubank, we should move to a collection of smaller and simpler tool.
+Regardless, I started to hacked on _Midje_ to tight some holes I found myself falling into.
+I eventually formed the opinion that, for the sake of maintainability and the points above, we should move to a collection of smaller and simpler testing tools.
 
 _clojure.test_, being more or less pervasive in the eco-system, seemed like a good thing to try.
 I found it a hard swallow when used in isolation: it was very bare-bones when compared to what _Midje_ was capable of.
-But _clojure.test_ was small and extensible, and with some work it looked promising to port the best ideas from _Midje_ into a suite of smaller test-framework agnostic libraries to use with _clojure.test_.
+But _clojure.test_ was small and extensible, and compatible with an approach of porting the best ideas from _Midje_ into a suite of smaller test-framework agnostic libraries.
 
 We ended up with _clojure.test_ at the core, [_matcher-combinators_](https://github.com/nubank/matcher-combinators) for asserting over nested data-structures in a declarative way, and [_mockfn_](https://github.com/nubank/mockfn) for mocking.
 
@@ -40,15 +42,15 @@ We ended up with _clojure.test_ at the core, [_matcher-combinators_](https://git
 In this time I often collaborated with [Sophia Velten](https://github.com/sovelten), who designed [_state-flow_](https://github.com/nubank/state-flow), the library Nubank uses for single-service integration tests.
 
 One thing Sophia emphasized with _state-flow_ is that the result of running a test should be data.
-It sounds like a simple and perhaps boring idea, but it has huge implications on the extensibility of a test framework.
+It sounds like a simple and perhaps boring idea but has huge implications on the extensibility of a test framework.
 
 For example, when _clojure.test_ tests are run, they emit detailed human-readable reports and return very coarse-grained summary as data `{:test 7, :pass 25, :fail 0, :error 0, :type :summary}`.
 This creates additional burden to tool makers that might want to adapt this output.
 For instance, [Arne Brasseur](https://twitter.com/plexus) details a bit in [this github comment](https://github.com/nubank/state-flow/issues/66#issuecomment-576801166) how they handled this in the [_Kaocha_ test runner](https://github.com/lambdaisland/kaocha).
 
-This isn't unworkable with _clojure.test_, given that it uses multimethods for its reporting, which one can override with custom reporting logic.
+This is workable with _clojure.test_, given that it uses user-override-able multimethods for its reporting.
 
-But I guess the issue is that for tool builders it still requires a good bit of work, work that I imagine has been repeated many times by different people in different dev tool code.
+I guess my issue with this design is tool builders are still required to do a good bit of work. I imagine this work has unfortunately been repeated many times by different people in different dev tool code.
 
 To concretize my point, _clojure.test_ currently works like this
 <div id="decouple"></div>
@@ -99,26 +101,32 @@ And if test evaluation and reporting were decoupled, it could look like the foll
 
 <br>
 
-## Clerk + Testing?
+## Clerk + testing
 
 Okay, but why am I rambling about this at all?
 
-Well, my colleagues at Nextjournal have been making some [really](https://nextjournal.github.io/clerk-demo/) [cool](https://twitter.com/mkvlr/status/1503767871620538375) [stuff](https://twitter.com/mkvlr/status/1499470357262127106) with this local-first notebook tool called _Clerk_. They've taken to chatting me up about how _Clerk_ could be applied to testing dev experience.
+Well I wanted to get a hold of more fine-grained test result data to start playing around with building test-related tools for Clerk, a local-first Clojure notebook tool.
 
-Like imagine being able to do your dev in Emacs or Neovim, but have a test runner that printed _matcher-combinator_ mismatch test failures, where irrelevant parts of the data-structure were auto-folded away, or stack-traces with folding.
+And what is _Clerk_ exactly?
+
+It is a computational notebook tool for Clojure, which gives you the interactivity and visualization gains of a notebook while still embracing your existing dev flow. Notebooks developed locally but can be published online statically by bundling the data generated from the Clojure code and publishing it with the front-end Clojurescript viewer code.
+
+My colleagues at Nextjournal have been making some [really](https://nextjournal.github.io/clerk-demo/) [cool](https://twitter.com/mkvlr/status/1503767871620538375) [stuff](https://twitter.com/mkvlr/status/1499470357262127106) with it! They've taken to chatting me up about how _Clerk_ could be applied to testing dev experience.
+
+Like imagine being able to do your dev in Emacs or Neovim, but have a test runner that printed _matcher-combinator_ mismatch test failures, where irrelevant parts of the data-structure were auto-folded away.
 
 Or you could add tests to your notebooks, plus a button to run them, and see highlighting for assertion forms that pass or fail.
 
-Anyways, I sat down to see how I could get _clojure.test_ to provide test result data to then send over to custom _Clerk_ viewers.
+So this is why I sat down to see how I could get _clojure.test_ to provide test result data to then send over to custom _Clerk_ viewers.
 
 
 ## separating test execution from test reporting
 
 As I dove into trying to get _clojure.test_ data I realized there were no APIs for providing fine-grained report results. Like getting, as data, exactly which assertion forms failed and what `deftest` variables they are associated with doesn't seem possible.
 
-So I found myself needing to solve the issue of decoupling test execution from test reporting, the thing that Sophia was so spot on about in _state-flow_'s design.
+I found myself needing to solve the issue of decoupling test execution from test reporting, the thing that Sophia was so spot on about in _state-flow_'s design years ago.
 
-I hacked a bit and my solution and it turned out pretty cute, so I wanted to share it.
+Hacking a bit, I found a solution that seemed pretty cute:
 
 <div id="editor"></div>
 
@@ -178,7 +186,7 @@ I hacked a bit and my solution and it turned out pretty cute, so I wanted to sha
 <br>
 
 What is going on here?
-Well, _clojure.test_ reporting is done using Clojure's multimethods, which allow you to dispatch to different function bodies depending on some dispatch criteria defined by `defmulti`. For instance, `clojure.test/report` looks like `(defmulti report :type)`, so the `:type` data of the arg passed into `report` specifies the behavior.
+Well, _clojure.test_ reporting is implemented using Clojure's multimethods, which allow you to dispatch to different function bodies depending on some dispatch criteria defined by `defmulti`. For instance, `clojure.test/report` looks like `(defmulti report :type)`, so the `:type` data of the arg passed into `report` specifies the behavior.
 
 Multimethods are a nice way to bake extensibility into your libraries because one can always define a new multimethod dispatch/body.
 
@@ -215,4 +223,7 @@ You can try it out in your own REPL; you should see something like this:
 
 <br>
 
-Cute, no? And fun how Clojure provides all the tools needed to do such adaptations to _clojure.test_. Sometimes at Nubank we'd toss around the idea of writing our own test framework with this decoupling baked it. But after this snippet of code I'm wondering if adapting is sufficient.
+Cute, no? And fun how Clojure provides all the tools needed to do such adaptations to _clojure.test_.
+And it isn't the only way to achieve this. Another approach could be to use `with-redefs` over `clojure.test/do-report`, which is the one place that `clojure.test/report` is called.
+
+At Nubank we'd sometime toss around the idea of writing our own test framework that explicitly decouples execution and reporting. Yet after working out this snippet of code I'm wondering how far we can get purely through adaption.
