@@ -1,6 +1,6 @@
-{:title "Thoughts on testing in Clojure"
+{:title "Couplings in Clojure testing tools"
  :layout :post
- :description ""
+ :description "Exploring how Clojure test frameworks couple test evaluation with reporting"
  :tags  []
  :toc false}
 <script src="../../js/clojure-mode.js" type="application/javascript"></script>
@@ -27,7 +27,7 @@ Coming from Java, I found _Midje_ wonderfully expressive and capable but after s
  * assertions are described in a non-S-expression infix style `(fact (inc 1) => 2 (dec 1) => 0)`. This made it hard to use structural editing tools.
  * the library takes a strong "all or nothing" approach, where most Clojure libraries are small and composable.
 
-Regardless, I started to hack on _Midje_ to tight some holes I found myself falling into.
+Regardless, I started to hack on _Midje_ to tighten some holes I found myself falling into.
 I eventually formed the opinion that, for the sake of maintainability and the points above, we should move to a collection of smaller and simpler testing tools.
 
 _clojure.test_, being more or less pervasive in the eco-system, seemed like a good thing to try.
@@ -39,7 +39,7 @@ We ended up with _clojure.test_ at the core, [_matcher-combinators_](https://git
 
 ## tests should produce data
 
-In this time I often collaborated with [Sophia Velten](https://github.com/sovelten), who designed [_state-flow_](https://github.com/nubank/state-flow), the library Nubank uses for single-service integration tests.
+In this time I often collaborated with [Sophia Velten](https://twitter.com/sophiavelten), who designed [_state-flow_](https://github.com/nubank/state-flow), the library Nubank uses for single-service integration tests.
 
 One thing Sophia emphasized with _state-flow_ is that the result of running a test should be data.
 It sounds like a simple and perhaps boring idea but has huge implications on the extensibility of a test framework.
