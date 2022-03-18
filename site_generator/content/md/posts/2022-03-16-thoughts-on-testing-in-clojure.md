@@ -27,7 +27,7 @@ Coming from Java, I found _Midje_ wonderfully expressive and capable but after s
  * assertions are described in a non-S-expression infix style `(fact (inc 1) => 2 (dec 1) => 0)`. This made it hard to use structural editing tools.
  * the library takes a strong "all or nothing" approach, where most Clojure libraries are small and composable.
 
-Regardless, I started to hacked on _Midje_ to tight some holes I found myself falling into.
+Regardless, I started to hack on _Midje_ to tight some holes I found myself falling into.
 I eventually formed the opinion that, for the sake of maintainability and the points above, we should move to a collection of smaller and simpler testing tools.
 
 _clojure.test_, being more or less pervasive in the eco-system, seemed like a good thing to try.
@@ -192,7 +192,7 @@ Multimethods are a nice way to bake extensibility into your libraries because on
 
 For example, in the _matcher-combinators_ integration with _clojure.test_, we were able to display custom _matcher-combinators_ mismatch results by extending `clojure.test/report` in the _matcher-combinators_ library itself, allowing operation over `:mismatch`, a new test result type we created (it [looked like this](https://github.com/nubank/matcher-combinators/pull/49/files#diff-c7340dd400d00da94964e2a1113886bd367b364028e0bdebdd9dc09e7f390a81L50) but was eventually migrated)
 
-What I'm doing now with the `report` multimethods above is stashing the old versions with [`methods`](https://clojuredocs.org/clojure.core/methods) (which I was delighted to discover this existed today), and redifining them to new behavior that eventually dispatches back to the stashed original. Essentially a hacky "call super"; using it ensures that the old _clojure.test_ API continues to work fine. The new versions also accumulate some report data using same weird `binding`, `dosync`, `commute` stuff; a pattern I lift from the _clojure.test_ code itself.
+What I'm doing now with the `report` multimethods above is stashing the old versions with [`methods`](https://clojuredocs.org/clojure.core/methods) (which I was delighted to discover this existed today), and redefining them to new behavior that eventually dispatches back to the stashed original. Essentially a hacky "call super"; using it ensures that the old _clojure.test_ API continues to work fine. The new versions also accumulate some report data using same weird `binding`, `dosync`, `commute` stuff; a pattern I lift from the _clojure.test_ code itself.
 
 With the `report` definitions hijacked, we can implement `evaluate-test-var` to mute any results printed by _clojure.test_ and also return the accumulated report data.
 
