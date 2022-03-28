@@ -45,7 +45,7 @@ Most of them expressed some level of discomfort with our established Clojure way
 I figured that when I joined [Nextjournal](nextjournal.com/) I'd be able to bring a lot of nice ideas from Nubank to the table.
 I've been surprised to see how, even though both places use Clojure and Datomic, the patterns I learned at Nubank make little sense on a small engineering team.
 
-Through the experience of working at Nextjournal I've started to better contextualize and understand Nubank's approach to Clojure. How it shines in an organization geared for the madness of the hyper-growth that VC investors demand, and also how it deviates from what many Clojurists are used to.
+Through the experience of working at Nextjournal I've started to better understand Nubank's approach to Clojure. How it shines in an organization geared for the madness of the hyper-growth that VC investors demand, and also how it deviates from what many Clojurists are used to.
 
 ### the REPL
 
