@@ -1,2 +1,4 @@
 site_generator/target/
 site_generator/public/
+*.aux
+*.log

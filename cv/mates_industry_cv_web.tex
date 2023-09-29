@@ -1,0 +1,229 @@
+\documentclass[10pt]{article}
+
+\usepackage[top=1.25in,bottom=1.25in,left=1.25in,right=1.25in]{geometry}
+\usepackage{crush}
+
+\usepackage{enumitem}
+
+\usepackage{microtype}
+
+\hyphenpenalty=10000
+\tolerance=2000
+\emergencystretch=1pt
+
+\newcommand{\labelcitem}{$\diamond$}
+\renewcommand{\labelitemi}{$\cdot$}
+\newcommand{\first}{$1^{\mbox{\scriptsize st}}$\ }
+\newcommand{\second}{$2^{\mbox{\scriptsize nd}}$\ }
+\newcommand{\third}{$3^{\mbox{\scriptsize rd}}$\ }
+
+\newenvironment{packeditem}{
+\vspace{-5mm}
+\begin{itemize}[leftmargin=*,labelindent=8pt]
+  \renewcommand{\labelitemi}{$\diamond$}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+}{\end{itemize}}
+
+\newcommand{\category}[2]{
+\begin{center}
+\vskip 6pt
+\begin{tabular*}{\textwidth}{@{}p{0.75in}@{\quad\;\;}p{4in}@{\quad\quad}p{0.7in}}
+%\begin{tabular*}{\textwidth}{@{}p{1in}p{4.8in}}
+\vcrush[t]{1in}{\textsc{#1}} &
+#2
+\end{tabular*}
+\end{center}
+}
+
+\newcommand{\categoryB}[2]{
+\begin{center}
+\vskip 6pt
+\begin{tabular*}{\textwidth}{@{}p{0.75in}@{\quad\;\;}p{4.4in}@{\quad\quad}p{0.3in}}
+%\begin{tabular*}{\textwidth}{@{}p{1in}p{4.8in}}
+\vcrush[t]{1in}{\textsc{#1}} &
+#2
+\end{tabular*}
+\end{center}
+}
+
+
+\newcommand{\n}{\\ & }
+\newcommand{\nn}{\\ \n}
+%\newcommand{\DT}[1]{\hspace{\stretch 1} \textit{#1}}
+\newcommand{\DT}[1]{&\hspace{\stretch 1}\textit{#1}}
+\newcommand{\conf}[1]{&\hspace{\stretch 1}\crushr{\textit{#1}}}
+\newcommand{\citem}{~$\diamond$~}
+
+\newcommand{\ed}[1]{}
+\newcommand{\present}{\phantom{2012}}
+
+\usepackage{url}
+\urlstyle{sf}
+
+\usepackage[nonormalsize,mathlf]{MinionPro}
+\usepackage[scaled=0.75]{beramono}
+
+\begin{document}
+
+% ------ Header --------------------------------------------------------
+
+{\LARGE \bf \sc
+\noindent Phillip Lopes Mates\hspace{\stretch 1}
+Resume
+}
+\vskip 10pt
+\hrule
+
+% ------ Address --------------------------------------------------------
+
+\begin{center}
+\vskip -5pt
+\begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}l}
+
+\begin{tabular}[t]{ll}
+% Northeastern, CCIS\\
+% 308 West Village H \\
+% 360 Huntington Avenue \\
+{\small\bf Resides:} & {\small Berlin, Germany} \\
+{\small\bf Citizenship:} & {\small USA, Brazil}
+
+\end{tabular} &
+
+\begin{tabular}[t]{ll}
+{\small\bf Email:} & {\small \url{phillip.mates@pm.me}}\\
+{\small\bf Web:} & {\small \url{https://philomates.github.io}}\\
+% {\small\bf Phone:} & {\small +1 801 518 3298} \\
+\end{tabular}
+
+\end{tabular*}
+\end{center}
+
+\vskip -6pt
+\hrule
+
+% --------- Statement ---------------------------------------------------
+
+\category{Statement}{
+I'm an engineer interested in building well-measured software, is discerning about tooling, and places precedence on the development process. I’m happiest when building products that empower users and facilitate social change.
+}
+
+% -------- Work experience --------------------------------------------
+
+\category{Experience}{
+{\bf Software Engineer}, Nextjournal, Berlin, DE\conf{2022 -- }\n
+Part of a small team using Clojure/script and Datomic to solve supply-chain problems. We employ modable-development, strive to keep our toolset small and honed, and are learning to navigate the balances between simplicity and completeness.\n\n
+
+{\bf Compilers Engineer}, Igalia, Remote\conf{Aug. -- Dec. 2021}\n
+Implemented the Shadow Realms JavaScript feature in JavaScriptCore and explored an unboxing optimization in the V8 JavaScript engine.\n\n
+
+{\bf Data Infrastructure Engineer}, Nubank, Berlin, DE\conf{2017 -- 2021}\n
+\begin{packeditem}
+\item \emph{Data infrastructure:} Innovating over our ETL for Datomic-backed services and developing data processing tools used by hundreds of internal clients.
+\item \emph{Testing frameworks:} Maintainer of several key testing tools at Nubank.
+\item \emph{Technical lead:} Set technical priorities for a small team focused on data ingestion and publishing.
+\end{packeditem}\n
+
+{\bf Software Engineer}, Nubank, S\~{a}o Paulo, BR \conf{Feb. -- Oct. 2017}\n
+\begin{packeditem}
+\item \emph{Microservices:} Build and maintain microservices in Clojure for a mobile-driven credit card product
+\item \emph{Engineering productivity:} Build tools and improve core Clojure libraries to boost the eﬃciency of a 100+ engineering team.
+\end{packeditem}\n
+
+{\bf Software Engineer}, Dimagi, Boston, MA \conf{2015 -- 2017}\n
+\begin{packeditem}
+\item \emph{CommCare:} improved stability and performance of an Android app used by tens of thousands of users world-wide. Implemented new features for users with low tech literacy.
+\item \emph{Tests:} established unit-level Robolectric and UI-level Calabash test systems for Android. Built an integration test-suite between mobile and server apps. Setup cross-repository CI system.
+\item \emph{Legacy code:} performed substantial refactors on a 5-year-old production legacy codebase. Migrated from Java 3 to 8 and from the Ant to Gradle build system.
+\item \emph{User empathy:} Worked with users to make development in the CommCare app building platform more approachable and efficient.
+\end{packeditem}
+
+% {\bf Research Student}, Northeastern University, Boston, MA \conf{2012 -- 2014}\n
+% Used type systems to prove correctness and security properties about compilers. Realized proofs using both paper/pencil and assisted methods.
+% \nn
+
+% {\bf Software Engineer Intern}, Google, Santa Monica, CA \conf{Summer 2011}\n
+% Built a domain name classifier to enforce policy violations and developed
+% internal analytics scripts.\nn
+}
+
+% -------- Publications --------------------------------------------
+
+\categoryB{Publications}
+{
+{\bf Under Control: Compositionally Correct Closure Conversion with Mutable State} \conf{\mbox{PPDP 2019}}\n
+P. Mates, J. Perconti and A. Ahmed\n
+{\em Principles and Practice of Declarative Programming}\nn
+
+{\bf A Provenance-Based Infrastructure to Support the Life Cycle of Executable Papers} \conf{\mbox{ICCS 2011}}\n
+D. Koop, E. Santos, P. Mates, H. Vo, P. Bonnet, B. Bauer, B. Surer, M. Troyer, D. Williams, J. Tohline, J. Freire and C. Silva.\n
+{\em International Conference on Computational Science}\nn
+
+{\bf CrowdLabs: Social Analysis and Visualization for the Sciences} \conf{\mbox{SSDBM 2011}}\n
+P. Mates, E. Santos, J. Freire and C. Silva\n
+{\em International Conference on Scientific and Statistical Database Management}\nn
+
+{\bf The ALPS project release 2.0:}\n
+{\bf Open source software for strongly correlated systems} \conf{\mbox{JSTAT 2011}}\n
+B. Bauer et al. (ALPS collaboration).\n
+{\em Journal of Statistical Mechanics: Theory and Experiment}\nn
+
+{\bf Towards Supporting Collaborative Data Analysis and Visualization}\n
+{\bf in a Coastal Margin Observatory} \conf{\mbox{CSCW 2010}}\n
+E. Santos, P. Mates, E. Anderson, B. Grimm, J. Freire and C. Silva\n
+{\em Workshop on The Changing Dynamics of Scientific Collaboration}\nn
+}
+\vspace{-3em}
+% -------- Talks --------------------------------------------
+\category{Talks}{
+{\bf The rise and fall of e2e at scale} \DT{April 2019}\n
+Dutch Clojure Days, Amsterdam, NL\nn
+{\bf How we test at Nubank} \DT{April 2018}\n
+Dutch Clojure Days, Amsterdam, NL\nn
+{\bf  Kripke Logical Relation for Affine Functions:}\n
+{\bf The Story of a Free Theorem in the Presence of Non-termination} \DT{Sept. 2013}\n
+The 2nd ACM SIGPLAN Workshop on Higher-Order Programming with Effects, Boston, MA\nn
+}
+\vspace{-3em}
+% ------- Education ---------------------------------------------------
+
+\category{Education}{
+  {\bf Northeastern University}, Boston, MA \DT{\ed{September }2012 -- \ed{December }2014}\n
+  MS in Computer Science, Programming Languages focus\n
+  \n
+{\bf University of Utah}, Salt Lake City, UT \DT{\ed{August }2008 -- \ed{December }2011}\n
+BS with honors in Computer Science, \emph{December 2011}
+}
+
+% -------- Technical Skills --------------------------------------------
+
+\category{Technical Skills}{
+  {\bf Languages:} Clojure, Java, Scala, Python, Racket \n
+  {\bf Platforms/Tools:} Datomic, Kafka, Android
+}
+
+% -------- Posters --------------------------------------------
+% \category{Posters}{
+% {\bf Analyzing Android Applications with Abstract Interpretation} \DT{ICFP 2012}\n
+% Student Research Competition}
+% \vspace{-1em}
+% -------- Teaching --------------------------------------------
+% \category{Teaching \mbox{experience}}{
+% {\bf Teaching assistant}, CS2500 \textit{Introduction to Programming and Computing} \DT{2012,2014}\n
+% Introductory undergraduate CS course at Northeastern University modeled off of ``How to Design Programs''.}
+
+% \category{References}{
+% \citem
+% Amal Ahmed, amal@ccs.neu.edu \conf{Assistant Professor} \n
+% \quad College of Computer and Information Science at NEU \n
+% \citem
+% Matt Might, might@cs.utah.edu \conf{Associate Professor} \n
+% \quad School of Computing at U of U \n
+% \citem
+% Claudio T. Silva, csilva@nyu.edu \conf{Professor} \n
+% \quad Computer Science and Engineering at NYU Poly
+% }
+
+
+\end{document}

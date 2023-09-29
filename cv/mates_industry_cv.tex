@@ -1,0 +1,265 @@
+\documentclass[10pt]{article}
+
+\usepackage[top=1.25in,bottom=1.25in,left=1.25in,right=1.25in]{geometry}
+\usepackage{crush}
+
+\usepackage{microtype}
+
+\hyphenpenalty=10000
+\tolerance=2000
+\emergencystretch=1pt
+
+\newcommand{\labelcitem}{$\diamond$}
+\renewcommand{\labelitemi}{$\cdot$}
+\newcommand{\first}{$1^{\mbox{\scriptsize st}}$\ }
+\newcommand{\second}{$2^{\mbox{\scriptsize nd}}$\ }
+\newcommand{\third}{$3^{\mbox{\scriptsize rd}}$\ }
+
+\newenvironment{packed_item}{
+\begin{itemize}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+}{\end{itemize}}
+
+\newcommand{\category}[2]{
+\begin{center}
+\vskip 6pt
+\begin{tabular*}{\textwidth}{@{}p{0.75in}@{\quad\;\;}p{4in}@{\quad\quad}p{0.7in}}
+%\begin{tabular*}{\textwidth}{@{}p{1in}p{4.8in}}
+\vcrush[t]{1in}{\textsc{#1}} &
+#2
+\end{tabular*}
+\end{center}
+}
+
+\newcommand{\categoryB}[2]{
+\begin{center}
+\vskip 6pt
+\begin{tabular*}{\textwidth}{@{}p{0.75in}@{\quad\;\;}p{4.4in}@{\quad\quad}p{0.3in}}
+%\begin{tabular*}{\textwidth}{@{}p{1in}p{4.8in}}
+\vcrush[t]{1in}{\textsc{#1}} &
+#2
+\end{tabular*}
+\end{center}
+}
+
+
+\newcommand{\n}{\\ & }
+\newcommand{\nn}{\\ \n}
+%\newcommand{\DT}[1]{\hspace{\stretch 1} \textit{#1}}
+\newcommand{\DT}[1]{&\hspace{\stretch 1}\textit{#1}}
+\newcommand{\conf}[1]{&\hspace{\stretch 1}\crushr{\textit{#1}}}
+\newcommand{\citem}{~$\diamond$~}
+
+\newcommand{\ed}[1]{}
+\newcommand{\present}{\phantom{2012}}
+
+\usepackage{url}
+\urlstyle{sf}
+
+%\usepackage[T1]{fontenc}
+%\usepackage[bitstream-charter]{mathdesign}
+
+%% \usepackage[T1]{fontenc}
+%%\usepackage{kpfonts}
+
+%\usepackage{tgtermes}
+
+\usepackage[nonormalsize,mathlf]{MinionPro}
+%\usepackage[medfamily,sansmath,scale=0.88]{MyriadPro}
+\usepackage[scaled=0.75]{beramono}
+
+%\usepackage[adobe-utopia]{mathdesign}
+
+%\usepackage{tgpagella}
+%\usepackage{mathpazo}
+
+%\usepackage{mathptmx}
+
+%\ed{
+%% \usepackage{fontspec}
+%% \usepackage{xunicode}
+%% \usepackage{xltxtra}
+%% \defaultfontfeatures{Mapping=tex-text} % converts LaTeX specials (``quotes'' --- dashes etc.) to unicode
+%% \setromanfont [Ligatures={Common}, Numbers={OldStyle}]{Hoefler Text}
+%% %\setromanfont{Linux Libertine O}
+%% \setmonofont[Scale=0.8]{Monaco}
+%% \setsansfont[Scale=0.9]{Optima Regular}
+% ---- CUSTOM AMPERSAND
+%\newcommand{\amper}{{\fontspec[Scale=.95]{Hoefler Text}\selectfont\itshape\&}}
+%}
+
+%% \setromanfont [Ligatures={Common}, BoldFont={Gentium Basic Bold}, ItalicFont={Gentium Basic Italic}]{Gentium Basic}
+%% \setmonofont[Scale=0.8]{Monaco}
+
+\begin{document}
+
+%\thispagestyle{empty}
+
+% ------ Header --------------------------------------------------------
+
+{\LARGE \bf \sc
+\noindent Phillip Mates\hspace{\stretch 1}
+Resume
+}
+\vskip 10pt
+\hrule
+
+% ------ Address --------------------------------------------------------
+
+\begin{center}
+\vskip -5pt
+\begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}l}
+
+\begin{tabular}[t]{l}
+Northeastern, CCIS\\
+308 West Village H \\
+360 Huntington Avenue \\
+Boston, MA 02115\\
+
+\end{tabular} &
+
+\begin{tabular}[t]{ll}
+{\small\bf Email:} & {\small \url{mates@ccs.neu.edu}}\\
+{\small\bf Web:} & {\small \url{http://www.ccs.neu.edu/home/mates/}}\\
+{\small\bf Phone:} & {\small +1 801 518 3298} \\
+{\small\bf Citizenship:} & {\small USA, Brazil}
+\end{tabular}
+
+\end{tabular*}
+\end{center}
+
+\vskip -6pt
+\hrule
+
+% --------- Research ----------------------------------------------------
+
+% \category{Research \mbox{interests}}{
+% Compiler verification, type systems, and static analysis}
+
+% --------- Statement ---------------------------------------------------
+
+\category{Statement}{
+  I have spent the last 2 years as a PhD student conducting research in the area of Programming Languages.
+  I built formal models to explore the correctness of compilers and equivalences between programs.
+  My graduate explorations have given me a deep understanding of the invariants and limits of languages and I am excited to apply my expertise in a practical setting.}
+
+% ------- Education ---------------------------------------------------
+
+\category{Education}{
+  {\bf Northeastern University}, Boston, MA \DT{\ed{September }2012 -- \ed{December }2014}\n
+MS in Computer Science, \emph{December 2014}\n
+\begin{tabular}{@{}p{0.65in}@{\;\;}l@{}}
+  Advisor:&Amal Ahmed\\
+\end{tabular}\nn
+
+{\bf University of Utah}, Salt Lake City, UT \DT{\ed{August }2008 -- \ed{December }2011}\n
+BS with honors in Computer Science, \emph{December 2011} \n
+}
+
+% -------- Work experience --------------------------------------------
+
+\category{Programming \mbox{~\textit{\&} Research} \mbox{experience}}{
+
+{\bf Research Assistant}, University of Utah, UT \conf{Summer 2012}\n
+Built a static analyzer capable of statically verifying permission usage of Android applications.
+The analyzer targeted Dalvik byte-code and supported higher-order control flow.\n
+Mentor: Matthew Might\nn
+
+{\bf Software Engineer}, Space Monkey, UT \conf{Summer 2012}\n
+Developed device monitoring software in Node.js during a brief period between my undergraduate and graduate studies.\nn
+
+{\bf Software Engineer Intern}, Google Santa Monica, CA \conf{2011}\n
+Built a domain name classifier to enforce policy violations and developed
+internal analytics scripts.\n
+Mentor: Joe Vanderwaart\nn
+
+{\bf Visiting Research Student}, Institute for Theoretical Physics, ETH Z\"urich \DT{2010}\n
+Worked with Computational Physicists to create useful data management
+tools.  Surveyed the field of Randomness Extractors and explored possible
+implementation designs for use in Monte Carlo simulations.\n
+Mentor: Matthias Troyer\nn
+
+{\bf Research Undergrad}, Scientific Computing and Imaging Institute, UT \conf{2009 -- 2010}\n
+Lead developer of an online visualization repository which leveraged the
+VisTrails system to foster collaboration and enable scientists to easily
+present and share their visualizations.  Developer for the VisTrails
+open-source provenance and workflow management system.\n
+Mentor: Claudio Silva\nn
+
+}
+
+
+
+% ------- Internships  ---------------------------------------------------
+
+\category{Training}{
+
+{\bf PhD summer schools} \n
+\citem Oregon Programming Languages Summer School \DT{\ed{July }2012} \n
+\citem Institut Henri Poincar\'e thematic trimester: \n
+\quad Semantics of proofs and certified mathematics \DT{\ed{August }2014}%
+}
+
+% -------- Publications --------------------------------------------
+
+\categoryB{Publications}
+{
+
+{\bf A Provenance-Based Infrastructure to Support the Life Cycle of Executable Papers} \conf{\mbox{ICCS 2011}}\n
+D. Koop, E. Santos, P. Mates, H. Vo, P. Bonnet, B. Bauer, B. Surer, M. Troyer, D. Williams, J. Tohline, J. Freire and C. Silva.\n
+{\em International Conference on Computational Science}\nn
+
+{\bf CrowdLabs: Social Analysis and Visualization for the Sciences} \conf{\mbox{SSDBM 2011}}\n
+P. Mates, E. Santos, J. Freire and C. Silva\n
+{\em International Conference on Scientific and Statistical Database Management}\nn
+
+{\bf The ALPS project release 2.0:}\n
+{\bf Open source software for strongly correlated systems} \conf{\mbox{JSTAT 2011}}\n
+B. Bauer et al. (ALPS collaboration).\n
+{\em Journal of Statistical Mechanics: Theory and Experiment}\nn
+
+{\bf Towards Supporting Collaborative Data Analysis and Visualization}\n
+{\bf in a Coastal Margin Observatory} \conf{\mbox{CSCW 2010}}\n
+E. Santos, P. Mates, E. Anderson, B. Grimm, J. Freire and C. Silva\n
+{\em Workshop on The Changing Dynamics of Scientific Collaboration}\nn
+}
+\vspace{-3em}
+% -------- Talks --------------------------------------------
+\category{Talks}{
+{\bf  Kripke Logical Relation for Affine Functions:}\n
+{\bf The Story of a Free Theorem in the Presence of Non-termination} \DT{Sept. 2013}\n
+The 2nd ACM SIGPLAN Workshop on Higher-Order Programming with Effects, Boston, MA\nn
+}
+\vspace{-3em}
+% -------- Posters --------------------------------------------
+\category{Posters}{
+{\bf Analyzing Android Applications with Abstract Interpretation} \DT{ICFP 2012}\n
+Student Research Competition }
+\vspace{-1em}
+% -------- Teaching --------------------------------------------
+\category{Teaching \mbox{experience}}{
+{\bf Teaching assistant}, CS2500 \textit{Introduction to Programming and Computing} \DT{2012,2014}\n
+Introductory undergraduate CS course at Northeastern University modeled off of ``How to Design Programs''.}
+% -------- Technical Skills --------------------------------------------
+
+\category{Technical Skills}{
+  {\bf Proficient:} Python \n
+  {\bf Familiar:} Java, C, Haskell, Racket, Coq \n
+}
+
+\category{References}{
+\citem
+Amal Ahmed, amal@ccs.neu.edu \conf{Assistant Professor} \n
+\quad College of Computer and Information Science at NEU \n
+\citem
+Matt Might, might@cs.utah.edu \conf{Associate Professor} \n
+\quad School of Computing at U of U \n
+\citem
+Claudio T. Silva, csilva@nyu.edu \conf{Professor} \n
+\quad Computer Science and Engineering at NYU Poly
+}
+
+
+\end{document}
