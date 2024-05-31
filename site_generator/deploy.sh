@@ -1,5 +1,5 @@
 #!/bin/bash
-ls -t ../ | grep -v site_generator | xargs -I {} rm -rf "../{}"
+ls -t ../ | grep -v site_generator | grep -v cv | xargs -I {} rm -rf "../{}"
 clojure -M:build
 cp -r public/* ../
 
